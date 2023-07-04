@@ -14,6 +14,7 @@ import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.xcontent.XContentBuilder;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class FailedNodeException extends ElasticsearchException {
 
@@ -43,4 +44,36 @@ public class FailedNodeException extends ElasticsearchException {
     protected void metadataToXContent(XContentBuilder builder, Params params) throws IOException {
         builder.field("node_id", nodeId);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FailedNodeException that = (FailedNodeException) o;
+        return Objects.equals(nodeId, that.nodeId)
+            && getMessage().equals(that.getMessage())
+            && getStackTrace().length == that.getStackTrace().length;
+    }
+
+    // TODO need to properly implement/test this?
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            nodeId,
+            getMessage(),
+            getClass().getName(), // subclasses should not have the same hash as their parent.
+            getStackTrace().length  // Could check uniqueness via mapping to list of strings, but there are different module path prefixes.
+            //
+            // TODO the following causes errors. e.g. the copy of "2" will be "throwable: 2"
+            // I think following constructor is called, java.lang.Throwable.Throwable(java.lang.Throwable)
+            // This is probably due to incomplete/incorrect serialization, not constructing a cause using the cause's message.
+            // getCause().getMessage()
+            //
+            // TODO serialized copy of the form "org.elasticsearch.common.io.stream.NotSerializableExceptionWrapper"
+            //  original of the form "java.lang.Throwable"
+            // getCause().getClass().getName()
+        );
+    }
+
+
 }

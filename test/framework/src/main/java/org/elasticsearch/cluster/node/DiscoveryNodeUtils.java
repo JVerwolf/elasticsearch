@@ -19,11 +19,11 @@ import java.util.Set;
 
 import static org.elasticsearch.test.ESTestCase.buildNewFakeTransportAddress;
 
-public class DiscoveryNodeUtils {
+public class DiscoveryNodeUtils { // TODO look at this
 
     public static DiscoveryNode create(String id) {
         return builder(id).build();
-    }
+    } // TODO here, this is all I need for the test
 
     public static DiscoveryNode create(String name, String id) {
         return builder(id).name(name).build();

@@ -22,8 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class BaseNodesXContentResponse<TNodeResponse extends BaseNodeResponse> extends BaseNodesResponse<TNodeResponse>
-    implements
-        ChunkedToXContent {
+    implements ChunkedToXContent {
 
     protected BaseNodesXContentResponse(ClusterName clusterName, List<TNodeResponse> nodes, List<FailedNodeException> failures) {
         super(clusterName, nodes, failures);
@@ -36,11 +35,21 @@ public abstract class BaseNodesXContentResponse<TNodeResponse extends BaseNodeRe
     @Override
     public final Iterator<? extends ToXContent> toXContentChunked(ToXContent.Params params) {
         return Iterators.concat(Iterators.single((b, p) -> {
-            b.startObject();
+            b.startObject("_nodes"); // TODO without the "_nodes" this throws "com.fasterxml.jackson.core.JsonGenerationException: Can not start an object, expecting field name"
             RestActions.buildNodesHeader(b, p, this);
             return b.field("cluster_name", getClusterName().value());
         }), xContentChunks(params), ChunkedToXContentHelper.endObject());
     }
 
     protected abstract Iterator<? extends ToXContent> xContentChunks(ToXContent.Params outerParams);
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 }
