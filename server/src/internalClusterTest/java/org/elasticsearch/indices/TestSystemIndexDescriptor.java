@@ -83,6 +83,32 @@ public class TestSystemIndexDescriptor extends SystemIndexDescriptor {
         );
     }
 
+    TestSystemIndexDescriptor(
+        String name,
+        String primaryName,
+        boolean allowsTemplates,
+        Settings settings
+    ) {
+        super(
+            name + "*",
+            primaryName,
+            "Test system index",
+            getOldMappings(),
+            settings,
+            name,
+            0,
+            "version",
+            "stack",
+            Version.fromString(Build.current().minWireCompatVersion()),
+            Type.INTERNAL_MANAGED,
+            List.of(),
+            List.of(),
+            null,
+            false,
+            allowsTemplates
+        );
+    }
+
     @Override
     public boolean isAutomaticallyManaged() {
         return true;
