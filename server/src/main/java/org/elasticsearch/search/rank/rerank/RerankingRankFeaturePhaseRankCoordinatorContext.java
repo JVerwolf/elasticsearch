@@ -55,12 +55,6 @@ public abstract class RerankingRankFeaturePhaseRankCoordinatorContext extends Ra
         // extract feature data from each shard rank-feature phase result
         RankFeatureDoc[] featureDocs = extractFeatureDocs(rankSearchResults);
 
-        // once we have an update score, provide a function to store that score based on the index of the feature doc
-        final BiConsumer<Integer, Float> scoreConsumer = (index, score) -> {
-            assert index >= 0 && index < featureDocs.length;
-            featureDocs[index].score = score;
-        };
-
         // generate the final `topResults` paginated results, and pass them to fetch phase through the `rankListener`
         computeScores(featureDocs, rankListener.delegateFailureAndWrap((l, r) -> {
             for (int i = 0; i < featureDocs.length; i++) {
