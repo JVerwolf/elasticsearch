@@ -1,0 +1,48 @@
+#
+# Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+# or more contributor license agreements. Licensed under the Elastic License
+# 2.0 and the Server Side Public License, v 1; you may not use this file except
+# in compliance with, at your election, the Elastic License 2.0 or the Server
+# Side Public License, v 1.
+#
+
+# The whitelist for ip-valued runtime fields
+
+# These two whitelists are required for painless to find the classes
+class org.apache.lucene.search.ScoreDoc {
+    (int, float)
+    (int, float, int)
+    float score
+    int doc
+    int shardIndex
+}
+class org.elasticsearch.search.rank.script.RankKey {
+    (int, int)
+    int doc()
+    int shardIndex()
+}
+
+class org.elasticsearch.search.rank.script.RetrieverResults{
+}
+
+class org.elasticsearch.search.rank.script.ScriptRankDoc{
+    (ScoreDoc, Map)
+    float getOriginalScore()
+    def getField(String)
+    def getUserContext()
+    void setUserContext(def)
+    float getNewScore()
+    void setNewScore(float)
+}
+
+class org.apache.lucene.util.PriorityQueue @no_import{
+    def pop()
+    def top()
+    int size()
+}
+
+class org.apache.lucene.util.VectorUtil {
+    float dotProduct(float[], float[])
+    float cosine(float[], float[])
+    float[] l2normalize(float[])
+}

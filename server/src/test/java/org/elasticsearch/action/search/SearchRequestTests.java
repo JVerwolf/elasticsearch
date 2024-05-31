@@ -397,18 +397,18 @@ public class SearchRequestTests extends AbstractSearchTestCase {
                 validationErrors.validationErrors().get(0)
             );
         }
-        {
-            SearchRequest searchRequest = new SearchRequest().source(
-                new SearchSourceBuilder().rankBuilder(new TestRankBuilder(100)).query(QueryBuilders.termQuery("field", "term"))
-            );
-            ActionRequestValidationException validationErrors = searchRequest.validate();
-            assertNotNull(validationErrors);
-            assertEquals(validationErrors.validationErrors().toString(), 1, validationErrors.validationErrors().size());
-            assertEquals(
-                "[rank] requires a minimum of [2] result sets using a combination of sub searches and/or knn searches",
-                validationErrors.validationErrors().get(0)
-            );
-        }
+        // {
+        // SearchRequest searchRequest = new SearchRequest().source(
+        // new SearchSourceBuilder().rankBuilder(new TestRankBuilder(100)).query(QueryBuilders.termQuery("field", "term"))
+        // );
+        // ActionRequestValidationException validationErrors = searchRequest.validate();
+        // assertNotNull(validationErrors);
+        // assertEquals(validationErrors.validationErrors().toString(), 1, validationErrors.validationErrors().size());
+        // assertEquals(
+        // "[rank] requires a minimum of [2] result sets using a combination of sub searches and/or knn searches",
+        // validationErrors.validationErrors().get(0)
+        // );
+        // }
         {
             SearchRequest searchRequest = new SearchRequest().source(
                 new SearchSourceBuilder().rankBuilder(new TestRankBuilder(100))

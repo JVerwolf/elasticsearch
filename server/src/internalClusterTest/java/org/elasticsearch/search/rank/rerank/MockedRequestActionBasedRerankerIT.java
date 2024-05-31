@@ -26,6 +26,7 @@ import org.elasticsearch.common.util.concurrent.EsExecutors;
 import org.elasticsearch.plugins.ActionPlugin;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.plugins.SearchPlugin;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.rank.RankBuilder;
 import org.elasticsearch.search.rank.RankShardResult;
@@ -351,13 +352,13 @@ public class MockedRequestActionBasedRerankerIT extends AbstractRerankerIT {
         }
 
         @Override
-        public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from) {
+        public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from, ScriptService scriptService) {
             return new RerankingQueryPhaseRankCoordinatorContext(rankWindowSize());
         }
 
         @Override
-        public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
-            return new RerankingRankFeaturePhaseRankShardContext(field);
+        public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(int size, int from, ScriptService scriptService) {
+            return new RerankingRankFeaturePhaseRankShardContext(List.of(field));
         }
 
         @Override
@@ -438,7 +439,7 @@ public class MockedRequestActionBasedRerankerIT extends AbstractRerankerIT {
         }
 
         @Override
-        public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
+        public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(int size, int from, ScriptService scriptService) {
             return new RankFeaturePhaseRankShardContext(field) {
                 @Override
                 public RankShardResult buildRankFeatureShardResult(SearchHits hits, int shardId) {

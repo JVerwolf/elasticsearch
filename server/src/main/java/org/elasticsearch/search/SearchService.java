@@ -732,9 +732,9 @@ public class SearchService extends AbstractLifecycleComponent implements IndexEv
                     searchContext.rankFeatureResult().incRef();
                     return searchContext.rankFeatureResult();
                 }
-                rankFeatureShardPhase.prepareForFetch(searchContext, request);
+                rankFeatureShardPhase.prepareForFetch(searchContext, request, scriptService);
                 fetchPhase.execute(searchContext, docIds);
-                rankFeatureShardPhase.processFetch(searchContext);
+                rankFeatureShardPhase.processFetch(searchContext, scriptService);
                 var rankFeatureResult = searchContext.rankFeatureResult();
                 rankFeatureResult.incRef();
                 return rankFeatureResult;
@@ -1829,6 +1829,10 @@ public class SearchService extends AbstractLifecycleComponent implements IndexEv
 
     public IndicesService getIndicesService() {
         return indicesService;
+    }
+
+    public ScriptService getScriptService() {
+        return scriptService;
     }
 
     /**

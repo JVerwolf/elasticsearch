@@ -13,6 +13,8 @@ import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.search.rank.RankDoc;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -21,34 +23,39 @@ import java.util.Objects;
 public class RankFeatureDoc extends RankDoc {
 
     // todo: update to support more than 1 fields; and not restrict to string data
-    public String featureData;
+    public List<Object> fieldValues = new ArrayList<>();
 
     public RankFeatureDoc(int doc, float score, int shardIndex) {
         super(doc, score, shardIndex);
     }
 
-    public RankFeatureDoc(StreamInput in) throws IOException {
-        super(in);
-        featureData = in.readOptionalString();
+    public RankFeatureDoc(int doc, float score, int shardIndex, List<Object> fieldValues) {
+        super(doc, score, shardIndex);
+        this.fieldValues = fieldValues;
     }
 
-    public void featureData(String featureData) {
-        this.featureData = featureData;
+    public RankFeatureDoc(StreamInput in) throws IOException {
+        super(in);
+        fieldValues = in.readCollectionAsList(StreamInput::readGenericValue);
+    }
+
+    public void featureData(List<Object> featureData) {
+        this.fieldValues = featureData;
     }
 
     @Override
     protected void doWriteTo(StreamOutput out) throws IOException {
-        out.writeOptionalString(featureData);
+        out.writeGenericList(fieldValues, StreamOutput::writeGenericValue);
     }
 
     @Override
     protected boolean doEquals(RankDoc rd) {
         RankFeatureDoc other = (RankFeatureDoc) rd;
-        return Objects.equals(this.featureData, other.featureData);
+        return Objects.equals(this.fieldValues, other.fieldValues);
     }
 
     @Override
     protected int doHashCode() {
-        return Objects.hashCode(featureData);
+        return Objects.hashCode(fieldValues);
     }
 }

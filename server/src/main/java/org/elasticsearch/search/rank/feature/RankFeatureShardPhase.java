@@ -10,6 +10,7 @@ package org.elasticsearch.search.rank.feature;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.SearchContextSourcePrinter;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.fetch.FetchSearchResult;
@@ -20,8 +21,10 @@ import org.elasticsearch.search.internal.SearchContext;
 import org.elasticsearch.search.rank.context.RankFeaturePhaseRankShardContext;
 import org.elasticsearch.tasks.TaskCancelledException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * The {@code RankFeatureShardPhase} executes the rank feature phase on the shard, iff there is a {@code RankBuilder} that requires it.
@@ -36,7 +39,7 @@ public final class RankFeatureShardPhase {
 
     public RankFeatureShardPhase() {}
 
-    public void prepareForFetch(SearchContext searchContext, RankFeatureShardRequest request) {
+    public void prepareForFetch(SearchContext searchContext, RankFeatureShardRequest request, ScriptService scriptService) {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("{}", new SearchContextSourcePrinter(searchContext));
         }
@@ -45,19 +48,21 @@ public final class RankFeatureShardPhase {
             throw new TaskCancelledException("cancelled");
         }
 
-        RankFeaturePhaseRankShardContext rankFeaturePhaseRankShardContext = shardContext(searchContext);
+        RankFeaturePhaseRankShardContext rankFeaturePhaseRankShardContext = shardContext(searchContext, scriptService);
         if (rankFeaturePhaseRankShardContext != null) {
-            assert rankFeaturePhaseRankShardContext.getField() != null : "field must not be null";
-            searchContext.fetchFieldsContext(
-                new FetchFieldsContext(Collections.singletonList(new FieldAndFormat(rankFeaturePhaseRankShardContext.getField(), null)))
-            );
+            assert rankFeaturePhaseRankShardContext.getFieldNames() != null : "field must not be null";
+            List<FieldAndFormat> fields = new ArrayList<>(rankFeaturePhaseRankShardContext.getFieldNames().size());
+            for (String fieldName : rankFeaturePhaseRankShardContext.getFieldNames()) {
+                fields.add(new FieldAndFormat(fieldName, null));
+            }
+            searchContext.fetchFieldsContext(new FetchFieldsContext(fields)); // TODO use docvalues instead if we can.
             searchContext.storedFieldsContext(StoredFieldsContext.fromList(Collections.singletonList(StoredFieldsContext._NONE_)));
             searchContext.addFetchResult();
             Arrays.sort(request.getDocIds());
         }
     }
 
-    public void processFetch(SearchContext searchContext) {
+    public void processFetch(SearchContext searchContext, ScriptService scriptService) {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("{}", new SearchContextSourcePrinter(searchContext));
         }
@@ -67,7 +72,10 @@ public final class RankFeatureShardPhase {
         }
 
         RankFeaturePhaseRankShardContext rankFeaturePhaseRankShardContext = searchContext.request().source().rankBuilder() != null
-            ? searchContext.request().source().rankBuilder().buildRankFeaturePhaseShardContext()
+            ? searchContext.request()
+            .source()
+            .rankBuilder()
+            .buildRankFeaturePhaseShardContext(searchContext.size(), searchContext.from(), scriptService)
             : null;
         if (rankFeaturePhaseRankShardContext != null) {
             RankFeatureShardResult featureRankShardResult = null;
@@ -97,9 +105,12 @@ public final class RankFeatureShardPhase {
         }
     }
 
-    private RankFeaturePhaseRankShardContext shardContext(SearchContext searchContext) {
+    private RankFeaturePhaseRankShardContext shardContext(SearchContext searchContext, ScriptService scriptService) {
         return searchContext.request().source() != null && searchContext.request().source().rankBuilder() != null
-            ? searchContext.request().source().rankBuilder().buildRankFeaturePhaseShardContext()
+            ? searchContext.request()
+            .source()
+            .rankBuilder()
+            .buildRankFeaturePhaseShardContext(searchContext.size(), searchContext.from(), scriptService)
             : null;
     }
 }

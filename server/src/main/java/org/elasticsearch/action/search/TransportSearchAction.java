@@ -1334,6 +1334,7 @@ public class TransportSearchAction extends HandledTransportAction<SearchRequest,
                 task.setProgressListener(new CCSSingleCoordinatorSearchProgressListener());
             }
             final SearchPhaseResults<SearchPhaseResult> queryResultConsumer = searchPhaseController.newSearchPhaseResults(
+                searchService.getScriptService(),
                 executor,
                 circuitBreaker,
                 task::isCancelled,

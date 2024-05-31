@@ -182,10 +182,19 @@ public class RankFeaturePhase extends SearchPhase {
         SearchPhaseController.ReducedQueryPhase reducedQueryPhase
     ) {
         assert rankFeaturePhaseRankCoordinatorContext != null;
+        var phaseResultsPerShard = rankPhaseResults.getAtomicArray().asList().stream().map(SearchPhaseResult::rankFeatureResult).toList();
         ActionListener<RankFeatureDoc[]> rankResultListener = new ActionListener<>() {
             @Override
             public void onResponse(RankFeatureDoc[] scoreDocs) {
-                SearchPhaseController.ReducedQueryPhase reducedRankFeaturePhase = newReducedQueryPhaseResults(reducedQueryPhase, scoreDocs);
+                var rankedScoreDocs = rankFeaturePhaseRankCoordinatorContext.rankOnResponse(
+                    reducedQueryPhase.queryPhaseRankCoordinatorContext(),
+                    phaseResultsPerShard,
+                    scoreDocs
+                );
+                SearchPhaseController.ReducedQueryPhase reducedRankFeaturePhase = newReducedQueryPhaseResults(
+                    reducedQueryPhase,
+                    rankedScoreDocs
+                );
                 moveToNextPhase(rankPhaseResults, reducedRankFeaturePhase);
             }
 
@@ -195,7 +204,8 @@ public class RankFeaturePhase extends SearchPhase {
             }
         };
         rankFeaturePhaseRankCoordinatorContext.rankGlobalResults(
-            rankPhaseResults.getAtomicArray().asList().stream().map(SearchPhaseResult::rankFeatureResult).toList(),
+            reducedQueryPhase.queryPhaseRankCoordinatorContext(),
+            phaseResultsPerShard,
             rankResultListener
         );
     }

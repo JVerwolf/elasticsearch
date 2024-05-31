@@ -44,5 +44,17 @@ public abstract class RankFeaturePhaseRankCoordinatorContext {
      * @param phaseResultsPerShard a list of the appropriate phase results from each shard
      * @param onFinish an ActionListener to be called once the final global_ranking is computed
      */
-    public abstract void rankGlobalResults(List<RankFeatureResult> phaseResultsPerShard, ActionListener<RankFeatureDoc[]> onFinish);
+    public abstract void rankGlobalResults(
+        QueryPhaseRankCoordinatorContext queryPhaseRankCoordinatorContext,
+        List<RankFeatureResult> phaseResultsPerShard,
+        ActionListener<RankFeatureDoc[]> onFinish
+    );
+
+    public RankFeatureDoc[] rankOnResponse(
+        QueryPhaseRankCoordinatorContext queryPhaseRankCoordinatorContext,
+        List<RankFeatureResult> phaseResultsPerShard,
+        RankFeatureDoc[] rankFeatureDocs
+    ) {
+        return rankFeatureDocs;
+    }
 }

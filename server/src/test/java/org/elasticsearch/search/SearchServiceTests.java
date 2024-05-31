@@ -80,6 +80,7 @@ import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.script.MockScriptEngine;
 import org.elasticsearch.script.MockScriptPlugin;
 import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchService.ResultsType;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -509,8 +510,12 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                             }
 
                             @Override
-                            public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
-                                return new RankFeaturePhaseRankShardContext(rankFeatureFieldName) {
+                            public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(
+                                int size,
+                                int from,
+                                ScriptService scriptService
+                            ) {
+                                return new RankFeaturePhaseRankShardContext(List.of(rankFeatureFieldName)) {
                                     @Override
                                     public RankShardResult buildRankFeatureShardResult(SearchHits hits, int shardId) {
                                         RankFeatureDoc[] rankFeatureDocs = new RankFeatureDoc[hits.getHits().length];
@@ -574,7 +579,7 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
             assertEquals(sortedRankWindowDocs.size(), rankFeatureShardResult.rankFeatureDocs.length);
             for (int i = 0; i < sortedRankWindowDocs.size(); i++) {
                 assertEquals((long) sortedRankWindowDocs.get(i), rankFeatureShardResult.rankFeatureDocs[i].doc);
-                assertEquals(rankFeatureShardResult.rankFeatureDocs[i].featureData, "aardvark_" + sortedRankWindowDocs.get(i));
+                assertEquals(rankFeatureShardResult.rankFeatureDocs[i].fieldValues, "aardvark_" + sortedRankWindowDocs.get(i));
             }
 
             List<Integer> globalTopKResults = randomNonEmptySubsetOf(
@@ -683,6 +688,7 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                                     return new RankFeaturePhaseRankCoordinatorContext(size, from, DEFAULT_RANK_WINDOW_SIZE) {
                                         @Override
                                         public void rankGlobalResults(
+                                            QueryPhaseRankCoordinatorContext queryPhaseRankCoordinatorContext,
                                             List<RankFeatureResult> rankSearchResults,
                                             ActionListener<RankFeatureDoc[]> onFinish
                                         ) {
@@ -710,7 +716,11 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                                 }
 
                                 @Override
-                                public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from) {
+                                public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(
+                                    int size,
+                                    int from,
+                                    ScriptService scriptService
+                                ) {
                                     return new QueryPhaseRankCoordinatorContext(RankBuilder.DEFAULT_RANK_WINDOW_SIZE) {
                                         @Override
                                         public ScoreDoc[] rankQueryPhaseResults(
@@ -758,8 +768,12 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                                 }
 
                                 @Override
-                                public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
-                                    return new RankFeaturePhaseRankShardContext(rankFeatureFieldName) {
+                                public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(
+                                    int size,
+                                    int from,
+                                    ScriptService scriptService
+                                ) {
+                                    return new RankFeaturePhaseRankShardContext(List.of(rankFeatureFieldName)) {
                                         @Override
                                         public RankShardResult buildRankFeatureShardResult(SearchHits hits, int shardId) {
                                             RankFeatureDoc[] rankFeatureDocs = new RankFeatureDoc[hits.getHits().length];
@@ -844,6 +858,7 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                                 return new RankFeaturePhaseRankCoordinatorContext(size, from, DEFAULT_RANK_WINDOW_SIZE) {
                                     @Override
                                     public void rankGlobalResults(
+                                        QueryPhaseRankCoordinatorContext queryPhaseRankCoordinatorContext,
                                         List<RankFeatureResult> rankSearchResults,
                                         ActionListener<RankFeatureDoc[]> onFinish
                                     ) {
@@ -853,7 +868,11 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                             }
 
                             @Override
-                            public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from) {
+                            public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(
+                                int size,
+                                int from,
+                                ScriptService scriptService
+                            ) {
                                 return new QueryPhaseRankCoordinatorContext(RankBuilder.DEFAULT_RANK_WINDOW_SIZE) {
                                     @Override
                                     public ScoreDoc[] rankQueryPhaseResults(
@@ -888,8 +907,12 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                             }
 
                             @Override
-                            public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
-                                return new RankFeaturePhaseRankShardContext(rankFeatureFieldName) {
+                            public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(
+                                int size,
+                                int from,
+                                ScriptService scriptService
+                            ) {
+                                return new RankFeaturePhaseRankShardContext(List.of(rankFeatureFieldName)) {
                                     @Override
                                     public RankShardResult buildRankFeatureShardResult(SearchHits hits, int shardId) {
                                         RankFeatureDoc[] rankFeatureDocs = new RankFeatureDoc[hits.getHits().length];
@@ -963,6 +986,7 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                                     return new RankFeaturePhaseRankCoordinatorContext(size, from, DEFAULT_RANK_WINDOW_SIZE) {
                                         @Override
                                         public void rankGlobalResults(
+                                            QueryPhaseRankCoordinatorContext queryPhaseRankCoordinatorContext,
                                             List<RankFeatureResult> rankSearchResults,
                                             ActionListener<RankFeatureDoc[]> onFinish
                                         ) {
@@ -990,7 +1014,11 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                                 }
 
                                 @Override
-                                public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from) {
+                                public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(
+                                    int size,
+                                    int from,
+                                    ScriptService scriptService
+                                ) {
                                     return new QueryPhaseRankCoordinatorContext(RankBuilder.DEFAULT_RANK_WINDOW_SIZE) {
                                         @Override
                                         public ScoreDoc[] rankQueryPhaseResults(
@@ -1038,8 +1066,12 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                                 }
 
                                 @Override
-                                public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
-                                    return new RankFeaturePhaseRankShardContext(rankFeatureFieldName) {
+                                public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(
+                                    int size,
+                                    int from,
+                                    ScriptService scriptService
+                                ) {
+                                    return new RankFeaturePhaseRankShardContext(List.of(rankFeatureFieldName)) {
                                         @Override
                                         public RankShardResult buildRankFeatureShardResult(SearchHits hits, int shardId) {
                                             throw new UnsupportedOperationException("simulated failure");
@@ -1108,6 +1140,7 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                                     return new RankFeaturePhaseRankCoordinatorContext(size, from, DEFAULT_RANK_WINDOW_SIZE) {
                                         @Override
                                         public void rankGlobalResults(
+                                            QueryPhaseRankCoordinatorContext queryPhaseRankCoordinatorContext,
                                             List<RankFeatureResult> rankSearchResults,
                                             ActionListener<RankFeatureDoc[]> rankListener
                                         ) {
@@ -1135,7 +1168,11 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                                 }
 
                                 @Override
-                                public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from) {
+                                public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(
+                                    int size,
+                                    int from,
+                                    ScriptService scriptService
+                                ) {
                                     return new QueryPhaseRankCoordinatorContext(RankBuilder.DEFAULT_RANK_WINDOW_SIZE) {
                                         @Override
                                         public ScoreDoc[] rankQueryPhaseResults(
@@ -1183,8 +1220,12 @@ public class SearchServiceTests extends ESSingleNodeTestCase {
                                 }
 
                                 @Override
-                                public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
-                                    return new RankFeaturePhaseRankShardContext(rankFeatureFieldName) {
+                                public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(
+                                    int size,
+                                    int from,
+                                    ScriptService scriptService
+                                ) {
+                                    return new RankFeaturePhaseRankShardContext(List.of(rankFeatureFieldName)) {
                                         @Override
                                         public RankShardResult buildRankFeatureShardResult(SearchHits hits, int shardId) {
                                             if (shardId == 0) {

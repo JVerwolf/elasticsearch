@@ -226,7 +226,12 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightPhase;
 import org.elasticsearch.search.fetch.subphase.highlight.Highlighter;
 import org.elasticsearch.search.fetch.subphase.highlight.PlainHighlighter;
 import org.elasticsearch.search.internal.ShardSearchRequest;
+import org.elasticsearch.search.rank.RankBuilder;
+import org.elasticsearch.search.rank.RankShardResult;
 import org.elasticsearch.search.rank.feature.RankFeatureShardPhase;
+import org.elasticsearch.search.rank.script.ScriptRankBuilder;
+import org.elasticsearch.search.rank.script.ScriptRankRetrieverBuilder;
+import org.elasticsearch.search.rank.script.ScriptRankShardResult;
 import org.elasticsearch.search.rescore.QueryRescorerBuilder;
 import org.elasticsearch.search.rescore.RescorerBuilder;
 import org.elasticsearch.search.retriever.KnnRetrieverBuilder;
@@ -344,6 +349,9 @@ public class SearchModule {
         requestCacheKeyDifferentiator = registerRequestCacheKeyDifferentiator(plugins);
         namedWriteables.addAll(SortValue.namedWriteables());
         registerGenericNamedWriteable(new SearchPlugin.GenericNamedWriteableSpec("GeoBoundingBox", GeoBoundingBox::new));
+        // TODO: make separate methods to add ranking entries
+        namedWriteables.add(new NamedWriteableRegistry.Entry(RankBuilder.class, ScriptRankRetrieverBuilder.NAME, ScriptRankBuilder::new));
+        namedWriteables.add(new NamedWriteableRegistry.Entry(RankShardResult.class, "ScriptRankShardResult", ScriptRankShardResult::new));
     }
 
     public List<NamedWriteableRegistry.Entry> getNamedWriteables() {
@@ -1067,7 +1075,7 @@ public class SearchModule {
     private void registerRetrieverParsers(List<SearchPlugin> plugins) {
         registerRetriever(new RetrieverSpec<>(StandardRetrieverBuilder.NAME, StandardRetrieverBuilder::fromXContent));
         registerRetriever(new RetrieverSpec<>(KnnRetrieverBuilder.NAME, KnnRetrieverBuilder::fromXContent));
-
+        registerRetriever(new RetrieverSpec<>(ScriptRankRetrieverBuilder.NAME, ScriptRankRetrieverBuilder::fromXContent));
         registerFromPlugin(plugins, SearchPlugin::getRetrievers, this::registerRetriever);
     }
 

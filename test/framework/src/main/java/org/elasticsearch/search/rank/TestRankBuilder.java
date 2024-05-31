@@ -14,6 +14,7 @@ import org.elasticsearch.TransportVersions;
 import org.elasticsearch.client.internal.Client;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.rank.context.QueryPhaseRankCoordinatorContext;
 import org.elasticsearch.search.rank.context.QueryPhaseRankShardContext;
 import org.elasticsearch.search.rank.context.RankFeaturePhaseRankCoordinatorContext;
@@ -28,7 +29,7 @@ import java.util.List;
 import static org.elasticsearch.test.ESTestCase.randomIntBetween;
 import static org.elasticsearch.xcontent.ConstructingObjectParser.optionalConstructorArg;
 
-public class TestRankBuilder extends RankBuilder {
+public class TestRankBuilder extends RankBuilder { // TODO noop
 
     public static final String NAME = "rank_test";
 
@@ -88,17 +89,17 @@ public class TestRankBuilder extends RankBuilder {
     }
 
     @Override
-    public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
+    public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from, ScriptService scriptService) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public RankFeaturePhaseRankCoordinatorContext buildRankFeaturePhaseCoordinatorContext(int size, int from, Client client) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(int size, int from, ScriptService scriptService) {
         throw new UnsupportedOperationException();
     }
 

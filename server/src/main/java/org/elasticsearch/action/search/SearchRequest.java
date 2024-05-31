@@ -406,12 +406,12 @@ public class SearchRequest extends ActionRequest implements IndicesRequest.Repla
                     );
                 }
                 int queryCount = source.subSearches().size() + source.knnSearch().size();
-                if (source.rankBuilder().isCompoundBuilder() && queryCount < 2) {
-                    validationException = addValidationError(
-                        "[rank] requires a minimum of [2] result sets using a combination of sub searches and/or knn searches",
-                        validationException
-                    );
-                }
+                // if (source.rankBuilder().isCompoundBuilder() && queryCount < 2) { // TODO
+                // validationException = addValidationError(
+                // "[rank] requires a minimum of [2] result sets using a combination of sub searches and/or knn searches",
+                // validationException
+                // );
+                // }
                 if (scroll) {
                     validationException = addValidationError("[rank] cannot be used in a scroll context", validationException);
                 }

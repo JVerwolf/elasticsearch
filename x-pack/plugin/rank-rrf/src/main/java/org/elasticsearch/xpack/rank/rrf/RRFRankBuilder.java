@@ -14,6 +14,7 @@ import org.elasticsearch.client.internal.Client;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.license.LicenseUtils;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.rank.RankBuilder;
 import org.elasticsearch.search.rank.context.QueryPhaseRankCoordinatorContext;
 import org.elasticsearch.search.rank.context.QueryPhaseRankShardContext;
@@ -34,7 +35,7 @@ import static org.elasticsearch.xcontent.ConstructingObjectParser.optionalConstr
 /**
  * The builder to support RRF. Adds user-defined parameters for window size and rank constant.
  */
-public class RRFRankBuilder extends RankBuilder {
+public class RRFRankBuilder extends RankBuilder { // TODO rewrite is a noop
 
     public static final int DEFAULT_RANK_CONSTANT = 60;
 
@@ -107,12 +108,12 @@ public class RRFRankBuilder extends RankBuilder {
     }
 
     @Override
-    public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from) {
+    public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from, ScriptService scriptService) {
         return new RRFQueryPhaseRankCoordinatorContext(size, from, rankWindowSize(), rankConstant);
     }
 
     @Override
-    public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
+    public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(int size, int from, ScriptService scriptService) {
         return null;
     }
 

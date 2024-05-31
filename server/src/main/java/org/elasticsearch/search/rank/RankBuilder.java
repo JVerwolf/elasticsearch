@@ -14,6 +14,7 @@ import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.io.stream.VersionedNamedWriteable;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.SearchService;
 import org.elasticsearch.search.rank.context.QueryPhaseRankCoordinatorContext;
 import org.elasticsearch.search.rank.context.QueryPhaseRankShardContext;
@@ -83,15 +84,15 @@ public abstract class RankBuilder implements VersionedNamedWriteable, ToXContent
     public abstract QueryPhaseRankShardContext buildQueryPhaseShardContext(List<Query> queries, int from);
 
     /**
-     * Generates a context used to be executed on the coordinating node, that would combine all individual shard results.
+     * Generates a context with the script service used to perform global ranking on the coordinator.
      */
-    public abstract QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from);
+    public abstract QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from, ScriptService scriptService);
 
     /**
      * Generates a context used to execute the rank feature phase on the shard. This is responsible for retrieving any needed
      * feature data, and passing them back to the coordinator through the appropriate {@link  RankShardResult}.
      */
-    public abstract RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext();
+    public abstract RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(int size, int from, ScriptService scriptService);
 
     /**
      * Generates a context used to perform global ranking during the RankFeature phase,

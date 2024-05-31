@@ -36,6 +36,7 @@ import org.elasticsearch.rest.action.search.RestSearchAction;
 import org.elasticsearch.search.fetch.subphase.LookupField;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.lookup.Source;
+import org.elasticsearch.search.rank.script.RankHitData;
 import org.elasticsearch.transport.LeakTracker;
 import org.elasticsearch.transport.RemoteClusterAware;
 import org.elasticsearch.xcontent.ToXContentFragment;
@@ -72,6 +73,7 @@ public final class SearchHit implements Writeable, ToXContentObject, RefCounted 
 
     static final int NO_RANK = -1;
     private int rank;
+    private RankHitData rankHitData;
 
     private final Text id;
 
@@ -127,6 +129,7 @@ public final class SearchHit implements Writeable, ToXContentObject, RefCounted 
             nestedTopDocId,
             DEFAULT_SCORE,
             NO_RANK,
+            null,
             id == null ? null : new Text(id),
             nestedIdentity,
             -1,
@@ -152,6 +155,7 @@ public final class SearchHit implements Writeable, ToXContentObject, RefCounted 
         int docId,
         float score,
         int rank,
+        RankHitData rankHitData,
         Text id,
         NestedIdentity nestedIdentity,
         long version,
@@ -201,6 +205,12 @@ public final class SearchHit implements Writeable, ToXContentObject, RefCounted 
             rank = in.readVInt();
         } else {
             rank = NO_RANK;
+        }
+        final RankHitData rankHitData;
+        if (in.getTransportVersion().onOrAfter(TransportVersions.SCRIPT_RANK_ADDED)) {
+            rankHitData = in.readOptionalNamedWriteable(RankHitData.class);
+        } else {
+            rankHitData = null;
         }
         final Text id = in.readOptionalText();
         if (in.getTransportVersion().before(TransportVersions.V_8_0_0)) {
@@ -265,6 +275,7 @@ public final class SearchHit implements Writeable, ToXContentObject, RefCounted 
             -1,
             score,
             rank,
+            rankHitData,
             id,
             nestedIdentity,
             version,
@@ -308,6 +319,11 @@ public final class SearchHit implements Writeable, ToXContentObject, RefCounted 
             out.writeVInt(rank);
         } else if (rank != NO_RANK) {
             throw new IllegalArgumentException("cannot serialize [rank] to version [" + out.getTransportVersion().toReleaseVersion() + "]");
+        }
+        if (out.getTransportVersion().onOrAfter(TransportVersions.SCRIPT_RANK_ADDED)) {
+            out.writeOptionalNamedWriteable(rankHitData);
+        } else if (rankHitData != null) {
+            throw new IllegalArgumentException("cannot serialize [rankHitData] to version [" + out.getTransportVersion() + "]");
         }
         out.writeOptionalText(id);
         if (out.getTransportVersion().before(TransportVersions.V_8_0_0)) {
@@ -367,6 +383,14 @@ public final class SearchHit implements Writeable, ToXContentObject, RefCounted 
 
     public int getRank() {
         return this.rank;
+    }
+
+    public void setRankHitData(RankHitData rankHitData) {
+        this.rankHitData = rankHitData;
+    }
+
+    public RankHitData getRankHitData() {
+        return rankHitData;
     }
 
     public void version(long version) {
@@ -740,6 +764,7 @@ public final class SearchHit implements Writeable, ToXContentObject, RefCounted 
             docId,
             score,
             rank,
+            rankHitData,
             id,
             nestedIdentity,
             version,
@@ -775,6 +800,7 @@ public final class SearchHit implements Writeable, ToXContentObject, RefCounted 
         static final String _PRIMARY_TERM = "_primary_term";
         static final String _SCORE = "_score";
         static final String _RANK = "_rank";
+        static final String _RANK_HIT_DATA = "_rank_hit_data";
         static final String FIELDS = "fields";
         static final String IGNORED_FIELD_VALUES = "ignored_field_values";
         static final String HIGHLIGHT = "highlight";
@@ -841,6 +867,10 @@ public final class SearchHit implements Writeable, ToXContentObject, RefCounted 
 
         if (rank != NO_RANK) {
             builder.field(Fields._RANK, rank);
+        }
+
+        if (rankHitData != null) {
+            builder.field(Fields._RANK_HIT_DATA, rankHitData);
         }
 
         for (DocumentField field : metaFields.values()) {

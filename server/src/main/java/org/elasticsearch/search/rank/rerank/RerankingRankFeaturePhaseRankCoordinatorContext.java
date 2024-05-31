@@ -10,6 +10,7 @@ package org.elasticsearch.search.rank.rerank;
 
 import org.apache.lucene.search.ScoreDoc;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.search.rank.context.QueryPhaseRankCoordinatorContext;
 import org.elasticsearch.search.rank.context.RankFeaturePhaseRankCoordinatorContext;
 import org.elasticsearch.search.rank.feature.RankFeatureDoc;
 import org.elasticsearch.search.rank.feature.RankFeatureResult;
@@ -19,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.Objects;
 
 /**
@@ -51,7 +51,11 @@ public abstract class RerankingRankFeaturePhaseRankCoordinatorContext extends Ra
      * @param rankListener      a rankListener to handle the global ranking result
      */
     @Override
-    public void rankGlobalResults(List<RankFeatureResult> rankSearchResults, ActionListener<RankFeatureDoc[]> rankListener) {
+    public void rankGlobalResults(
+        QueryPhaseRankCoordinatorContext queryPhaseRankCoordinatorContext,
+        List<RankFeatureResult> rankSearchResults,
+        ActionListener<RankFeatureDoc[]> rankListener
+    ) {
         // extract feature data from each shard rank-feature phase result
         RankFeatureDoc[] featureDocs = extractFeatureDocs(rankSearchResults);
 
@@ -75,7 +79,7 @@ public abstract class RerankingRankFeaturePhaseRankCoordinatorContext extends Ra
         List<RankFeatureDoc> docFeatures = new ArrayList<>();
         for (RankFeatureResult rankFeatureResult : rankSearchResults) {
             RankFeatureShardResult shardResult = rankFeatureResult.shardResult();
-            docFeatures.addAll(Arrays.stream(shardResult.rankFeatureDocs).filter(x -> Objects.nonNull(x.featureData)).toList());
+            docFeatures.addAll(Arrays.stream(shardResult.rankFeatureDocs).filter(x -> Objects.nonNull(x.fieldValues)).toList());
         }
         return docFeatures.toArray(new RankFeatureDoc[0]);
     }

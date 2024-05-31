@@ -871,6 +871,7 @@ public enum SearchResponseUtils {
             -1,
             get(SearchHit.Fields._SCORE, values, SearchHit.DEFAULT_SCORE),
             get(SearchHit.Fields._RANK, values, SearchHit.NO_RANK),
+            get(SearchHit.Fields._RANK_HIT_DATA, values, null),
             id == null ? null : new Text(id),
             get(SearchHit.NestedIdentity._NESTED, values, null),
             get(SearchHit.Fields._VERSION, values, -1L),

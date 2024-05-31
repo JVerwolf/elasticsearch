@@ -24,6 +24,7 @@ import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.lucene.search.TopDocsAndMaxScore;
 import org.elasticsearch.common.util.concurrent.EsExecutors;
 import org.elasticsearch.index.shard.ShardId;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.DocValueFormat;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -860,7 +861,11 @@ public class RankFeaturePhaseTests extends ESTestCase {
     private RankFeaturePhaseRankCoordinatorContext defaultRankFeaturePhaseRankCoordinatorContext(int size, int from, int rankWindowSize) {
         return new RankFeaturePhaseRankCoordinatorContext(size, from, rankWindowSize) {
             @Override
-            public void rankGlobalResults(List<RankFeatureResult> rankSearchResults, ActionListener<RankFeatureDoc[]> rankListener) {
+            public void rankGlobalResults(
+                QueryPhaseRankCoordinatorContext queryPhaseRankCoordinatorContext,
+                List<RankFeatureResult> rankSearchResults,
+                ActionListener<RankFeatureDoc[]> rankListener
+            ) {
                 List<RankFeatureDoc> features = new ArrayList<>();
                 for (RankFeatureResult rankFeatureResult : rankSearchResults) {
                     RankFeatureShardResult shardResult = rankFeatureResult.shardResult();
@@ -912,7 +917,7 @@ public class RankFeaturePhaseTests extends ESTestCase {
     }
 
     private RankFeaturePhaseRankShardContext defaultRankFeaturePhaseRankShardContext(String field) {
-        return new RankFeaturePhaseRankShardContext(field) {
+        return new RankFeaturePhaseRankShardContext(List.of(field)) {
             @Override
             public RankShardResult buildRankFeatureShardResult(SearchHits hits, int shardId) {
                 RankFeatureDoc[] rankFeatureDocs = new RankFeatureDoc[hits.getHits().length];
@@ -920,7 +925,7 @@ public class RankFeaturePhaseTests extends ESTestCase {
                     SearchHit hit = hits.getHits()[i];
                     rankFeatureDocs[i] = new RankFeatureDoc(hit.docId(), hit.getScore(), shardId);
                     rankFeatureDocs[i].score += 100f;
-                    rankFeatureDocs[i].featureData("ranked_" + hit.docId());
+                    rankFeatureDocs[i].featureData(List.of("ranked_" + hit.docId()));
                     rankFeatureDocs[i].rank = i + 1;
                 }
                 return new RankFeatureShardResult(rankFeatureDocs);
@@ -996,12 +1001,12 @@ public class RankFeaturePhaseTests extends ESTestCase {
             }
 
             @Override
-            public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from) {
+            public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from, ScriptService scriptService) {
                 return queryPhaseRankCoordinatorContext;
             }
 
             @Override
-            public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
+            public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(int size, int from, ScriptService scriptService) {
                 return rankFeaturePhaseRankShardContext;
             }
 
@@ -1043,6 +1048,7 @@ public class RankFeaturePhaseTests extends ESTestCase {
         MockSearchPhaseContext mockSearchPhaseContext
     ) {
         return controller.newSearchPhaseResults(
+            null,
             EsExecutors.DIRECT_EXECUTOR_SERVICE,
             new NoopCircuitBreaker(CircuitBreaker.REQUEST),
             () -> false,
@@ -1077,7 +1083,11 @@ public class RankFeaturePhaseTests extends ESTestCase {
         try {
             hits = SearchHits.unpooled(searchHits, new TotalHits(totalHits, TotalHits.Relation.EQUAL_TO), maxScore);
             // construct the appropriate RankFeatureDoc objects based on the rank builder
-            RankFeaturePhaseRankShardContext rankFeaturePhaseRankShardContext = shardRankBuilder.buildRankFeaturePhaseShardContext();
+            RankFeaturePhaseRankShardContext rankFeaturePhaseRankShardContext = shardRankBuilder.buildRankFeaturePhaseShardContext(
+                100,
+                0,
+                null
+            );
             RankFeatureShardResult rankShardResult = (RankFeatureShardResult) rankFeaturePhaseRankShardContext.buildRankFeatureShardResult(
                 hits,
                 shardTarget.getShardId().id()
@@ -1141,7 +1151,7 @@ public class RankFeaturePhaseTests extends ESTestCase {
             assertEquals(expected.doc, actual.doc);
             assertEquals(expected.rank, actual.rank);
             assertEquals(expected.score, actual.score, 10E-5);
-            assertEquals(expected.featureData, actual.featureData);
+            assertEquals(expected.featureData, actual.fieldValues);
         }
     }
 

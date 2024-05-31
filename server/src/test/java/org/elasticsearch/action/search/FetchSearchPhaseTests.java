@@ -54,6 +54,7 @@ public class FetchSearchPhaseTests extends ESTestCase {
         MockSearchPhaseContext mockSearchPhaseContext = new MockSearchPhaseContext(1);
         try (
             SearchPhaseResults<SearchPhaseResult> results = controller.newSearchPhaseResults(
+                null,
                 EsExecutors.DIRECT_EXECUTOR_SERVICE,
                 new NoopCircuitBreaker(CircuitBreaker.REQUEST),
                 () -> false,
@@ -144,6 +145,7 @@ public class FetchSearchPhaseTests extends ESTestCase {
         SearchPhaseController controller = new SearchPhaseController((t, s) -> InternalAggregationTestCase.emptyReduceContextBuilder());
         try (
             SearchPhaseResults<SearchPhaseResult> results = controller.newSearchPhaseResults(
+                null,
                 EsExecutors.DIRECT_EXECUTOR_SERVICE,
                 new NoopCircuitBreaker(CircuitBreaker.REQUEST),
                 () -> false,
@@ -262,6 +264,7 @@ public class FetchSearchPhaseTests extends ESTestCase {
         SearchPhaseController controller = new SearchPhaseController((t, s) -> InternalAggregationTestCase.emptyReduceContextBuilder());
         try (
             SearchPhaseResults<SearchPhaseResult> results = controller.newSearchPhaseResults(
+                null,
                 EsExecutors.DIRECT_EXECUTOR_SERVICE,
                 new NoopCircuitBreaker(CircuitBreaker.REQUEST),
                 () -> false,
@@ -391,6 +394,7 @@ public class FetchSearchPhaseTests extends ESTestCase {
         MockSearchPhaseContext mockSearchPhaseContext = new MockSearchPhaseContext(numHits);
         try (
             SearchPhaseResults<SearchPhaseResult> results = controller.newSearchPhaseResults(
+                null,
                 EsExecutors.DIRECT_EXECUTOR_SERVICE,
                 new NoopCircuitBreaker(CircuitBreaker.REQUEST),
                 () -> false,
@@ -508,6 +512,7 @@ public class FetchSearchPhaseTests extends ESTestCase {
         SearchPhaseController controller = new SearchPhaseController((t, s) -> InternalAggregationTestCase.emptyReduceContextBuilder());
         try (
             SearchPhaseResults<SearchPhaseResult> results = controller.newSearchPhaseResults(
+                null,
                 EsExecutors.DIRECT_EXECUTOR_SERVICE,
                 new NoopCircuitBreaker(CircuitBreaker.REQUEST),
                 () -> false,
@@ -612,6 +617,7 @@ public class FetchSearchPhaseTests extends ESTestCase {
         SearchPhaseController controller = new SearchPhaseController((t, s) -> InternalAggregationTestCase.emptyReduceContextBuilder());
         try (
             SearchPhaseResults<SearchPhaseResult> results = controller.newSearchPhaseResults(
+                null,
                 EsExecutors.DIRECT_EXECUTOR_SERVICE,
                 new NoopCircuitBreaker(CircuitBreaker.REQUEST),
                 () -> false,

@@ -18,6 +18,7 @@ import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.plugins.SearchPlugin;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.rank.RankBuilder;
 import org.elasticsearch.search.rank.RankShardResult;
@@ -125,13 +126,13 @@ public class FieldBasedRerankerIT extends AbstractRerankerIT {
         }
 
         @Override
-        public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from) {
+        public QueryPhaseRankCoordinatorContext buildQueryPhaseCoordinatorContext(int size, int from, ScriptService scriptService) {
             return new RerankingQueryPhaseRankCoordinatorContext(rankWindowSize());
         }
 
         @Override
-        public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
-            return new RerankingRankFeaturePhaseRankShardContext(field);
+        public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(int size, int from, ScriptService scriptService) {
+            return new RerankingRankFeaturePhaseRankShardContext(List.of(field));
         }
 
         @Override
@@ -141,7 +142,7 @@ public class FieldBasedRerankerIT extends AbstractRerankerIT {
                 protected void computeScores(RankFeatureDoc[] featureDocs, ActionListener<float[]> onFinish) {
                     float[] rankScores = new float[featureDocs.length];
                     for (int i = 0; i < rankScores.length; i++) {
-                        rankScores[i] = featureDocs[i].featureData == null ? 0f : Float.parseFloat(featureDocs[i].featureData);
+                        rankScores[i] = featureDocs[i].fieldValues == null ? 0f : Float.parseFloat(featureDocs[i].fieldValues);
                     }
                     onFinish.onResponse(rankScores);
                 }
@@ -207,7 +208,7 @@ public class FieldBasedRerankerIT extends AbstractRerankerIT {
         }
 
         @Override
-        public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext() {
+        public RankFeaturePhaseRankShardContext buildRankFeaturePhaseShardContext(int size, int from, ScriptService scriptService) {
             return new RankFeaturePhaseRankShardContext(field) {
                 @Override
                 public RankShardResult buildRankFeatureShardResult(SearchHits hits, int shardId) {

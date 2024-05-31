@@ -67,7 +67,6 @@ public abstract class ActionRequestRankFeaturePhaseRankCoordinatorContext<Reques
      */
     protected abstract float[] extractScoresFromResponse(Response response);
 
-
     protected void computeScores(RankFeatureDoc[] featureDocs, ActionListener<float[]> scoreListener) {
         // Wrap the provided rankListener to an ActionListener that would handle the response from the inference service
         // and then pass the results
@@ -77,7 +76,9 @@ public abstract class ActionRequestRankFeaturePhaseRankCoordinatorContext<Reques
             l.onResponse(scores);
         });
 
-        List<String> featureData = Arrays.stream(featureDocs).map(x -> x.featureData).toList();
+        List<String> featureData = Arrays.stream(featureDocs)
+            .map(x -> (String) x.fieldValues.get(0)) // TODO change this to use multiple values.
+            .toList();
         Request request = generateRequest(featureData);
         try {
             ActionType<Response> action = actionType();

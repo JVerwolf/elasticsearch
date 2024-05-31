@@ -190,6 +190,7 @@ public class SearchQueryThenFetchAsyncActionTests extends ESTestCase {
         try (
             QueryPhaseResultConsumer resultConsumer = new QueryPhaseResultConsumer(
                 searchRequest,
+                null,
                 EsExecutors.DIRECT_EXECUTOR_SERVICE,
                 new NoopCircuitBreaker(CircuitBreaker.REQUEST),
                 controller,
@@ -341,6 +342,7 @@ public class SearchQueryThenFetchAsyncActionTests extends ESTestCase {
         SearchTask task = new SearchTask(0, "n/a", "n/a", () -> "test", null, Collections.emptyMap());
         QueryPhaseResultConsumer resultConsumer = new QueryPhaseResultConsumer(
             searchRequest,
+            null,
             EsExecutors.DIRECT_EXECUTOR_SERVICE,
             new NoopCircuitBreaker(CircuitBreaker.REQUEST),
             controller,
@@ -491,6 +493,7 @@ public class SearchQueryThenFetchAsyncActionTests extends ESTestCase {
         SearchTask task = new SearchTask(0, "n/a", "n/a", () -> "test", null, Collections.emptyMap());
         QueryPhaseResultConsumer resultConsumer = new QueryPhaseResultConsumer(
             searchRequest,
+            null,
             EsExecutors.DIRECT_EXECUTOR_SERVICE,
             new NoopCircuitBreaker(CircuitBreaker.REQUEST),
             controller,
@@ -642,6 +645,7 @@ public class SearchQueryThenFetchAsyncActionTests extends ESTestCase {
         SearchTask task = new SearchTask(0, "n/a", "n/a", () -> "test", null, Collections.emptyMap());
         QueryPhaseResultConsumer resultConsumer = new QueryPhaseResultConsumer(
             searchRequest,
+            null,
             EsExecutors.DIRECT_EXECUTOR_SERVICE,
             new NoopCircuitBreaker(CircuitBreaker.REQUEST),
             controller,
