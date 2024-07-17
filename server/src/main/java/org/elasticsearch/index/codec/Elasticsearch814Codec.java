@@ -19,6 +19,7 @@ import org.apache.lucene.codecs.lucene99.Lucene99PostingsFormat;
 import org.apache.lucene.codecs.perfield.PerFieldDocValuesFormat;
 import org.apache.lucene.codecs.perfield.PerFieldKnnVectorsFormat;
 import org.apache.lucene.codecs.perfield.PerFieldPostingsFormat;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.codec.zstd.Zstd814StoredFieldsFormat;
 
 /**
@@ -30,7 +31,7 @@ public class Elasticsearch814Codec extends CodecService.DeduplicateFieldInfosCod
     private final StoredFieldsFormat storedFieldsFormat;
 
     private final PostingsFormat defaultPostingsFormat;
-    private final PostingsFormat postingsFormat = new PerFieldPostingsFormat() {
+    private final PostingsFormat postingsFormat = new PerFieldPostingsFormat() { // here
         @Override
         public PostingsFormat getPostingsFormatForField(String field) {
             return Elasticsearch814Codec.this.getPostingsFormatForField(field);

@@ -17,9 +17,12 @@ import org.apache.lucene.search.suggest.document.FuzzyCompletionQuery;
 import org.apache.lucene.search.suggest.document.PrefixCompletionQuery;
 import org.apache.lucene.search.suggest.document.RegexCompletionQuery;
 import org.apache.lucene.search.suggest.document.SuggestField;
+import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.ParsingException;
 import org.elasticsearch.common.logging.DeprecationCategory;
 import org.elasticsearch.common.logging.DeprecationLogger;
+import org.elasticsearch.common.settings.Setting;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.common.util.Maps;
 import org.elasticsearch.index.IndexVersion;
@@ -27,6 +30,7 @@ import org.elasticsearch.index.IndexVersions;
 import org.elasticsearch.index.analysis.AnalyzerScope;
 import org.elasticsearch.index.analysis.NamedAnalyzer;
 import org.elasticsearch.index.query.SearchExecutionContext;
+import org.elasticsearch.internal.CompletionPostingsExtension;
 import org.elasticsearch.search.suggest.completion.CompletionSuggester;
 import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.elasticsearch.search.suggest.completion.context.ContextMappings;
@@ -49,6 +53,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 /**
@@ -74,6 +79,12 @@ import java.util.Set;
  */
 public class CompletionFieldMapper extends FieldMapper {
     public static final String CONTENT_TYPE = "completion";
+
+    public static final Setting<Boolean> COMPLETION_FST_ON_HEAP = Setting.boolSetting(
+        "test.test.test",
+        true,
+        Setting.Property.NodeScope
+    );
 
     /**
      * Maximum allowed number of completion contexts in a mapping.
@@ -369,7 +380,21 @@ public class CompletionFieldMapper extends FieldMapper {
         return (CompletionFieldType) super.fieldType();
     }
 
-    static PostingsFormat postingsFormat() {
+    /**
+     * TODO
+     *
+     * @param nodeSettings
+     * @return
+     */
+    public static PostingsFormat getPostingsFormat(Settings nodeSettings) {
+        if (DiscoveryNode.isStateless(nodeSettings)) {
+            ServiceLoader<CompletionPostingsExtension> loader = ServiceLoader.load(CompletionPostingsExtension.class);
+            for (CompletionPostingsExtension extension : loader) {
+                return extension.getPostingsFormat(nodeSettings);
+                // TODO use ExtensionLoader.loadSingleton( to load this
+            }
+            // TODO: log/throw an error if this fails to find serverless postings extension?
+        }
         return PostingsFormat.forName("Completion99");
     }
 

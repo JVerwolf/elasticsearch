@@ -100,6 +100,10 @@ public interface LocalClusterHandle extends ClusterHandle {
      * Returns an {@link InputStream} for the given node log.
      */
     InputStream getNodeLog(int index, LogType logType);
+    // TODO can ensure that we load the right implementation here
+    // Use logger at debug level
+    // Set the level in the test
+    //
 
     /**
      * Writes secure settings to the relevant secure config file on each node. Use this method if you are dynamically updating secure

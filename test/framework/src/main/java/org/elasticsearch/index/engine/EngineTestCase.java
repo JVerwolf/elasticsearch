@@ -1610,7 +1610,7 @@ public abstract class EngineTestCase extends ESTestCase {
     }
 
     protected static CodecService newCodecService() {
-        return new CodecService(null, BigArrays.NON_RECYCLING_INSTANCE);
+        return new CodecService(null, BigArrays.NON_RECYCLING_INSTANCE, Settings.EMPTY);
     }
 
     /**

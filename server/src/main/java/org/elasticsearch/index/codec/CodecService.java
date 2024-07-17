@@ -12,6 +12,7 @@ import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.codecs.FieldInfosFormat;
 import org.apache.lucene.codecs.FilterCodec;
 import org.apache.lucene.codecs.lucene99.Lucene99Codec;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.BigArrays;
 import org.elasticsearch.common.util.FeatureFlag;
 import org.elasticsearch.core.Nullable;
@@ -42,22 +43,32 @@ public class CodecService {
     /** the raw unfiltered lucene default. useful for testing */
     public static final String LUCENE_DEFAULT_CODEC = "lucene_default";
 
-    public CodecService(@Nullable MapperService mapperService, BigArrays bigArrays) {
+    public CodecService(@Nullable MapperService mapperService, BigArrays bigArrays, Settings nodeSettings) {
         final var codecs = new HashMap<String, Codec>();
 
-        Codec legacyBestSpeedCodec = new LegacyPerFieldMapperCodec(Lucene99Codec.Mode.BEST_SPEED, mapperService, bigArrays);
+        Codec legacyBestSpeedCodec = new LegacyPerFieldMapperCodec(Lucene99Codec.Mode.BEST_SPEED, mapperService, bigArrays, nodeSettings);
         if (ZSTD_STORED_FIELDS_FEATURE_FLAG.isEnabled()) {
-            codecs.put(DEFAULT_CODEC, new PerFieldMapperCodec(Zstd814StoredFieldsFormat.Mode.BEST_SPEED, mapperService, bigArrays));
+            codecs.put(DEFAULT_CODEC, new PerFieldMapperCodec(
+                Zstd814StoredFieldsFormat.Mode.BEST_SPEED,
+                mapperService,
+                bigArrays,
+                nodeSettings
+            ));
         } else {
             codecs.put(DEFAULT_CODEC, legacyBestSpeedCodec);
         }
         codecs.put(LEGACY_DEFAULT_CODEC, legacyBestSpeedCodec);
 
-        Codec legacyBestCompressionCodec = new LegacyPerFieldMapperCodec(Lucene99Codec.Mode.BEST_COMPRESSION, mapperService, bigArrays);
+        Codec legacyBestCompressionCodec = new LegacyPerFieldMapperCodec(
+            Lucene99Codec.Mode.BEST_COMPRESSION,
+            mapperService,
+            bigArrays,
+            nodeSettings
+        );
         if (ZSTD_STORED_FIELDS_FEATURE_FLAG.isEnabled()) {
             codecs.put(
                 BEST_COMPRESSION_CODEC,
-                new PerFieldMapperCodec(Zstd814StoredFieldsFormat.Mode.BEST_COMPRESSION, mapperService, bigArrays)
+                new PerFieldMapperCodec(Zstd814StoredFieldsFormat.Mode.BEST_COMPRESSION, mapperService, bigArrays, nodeSettings)
             );
         } else {
             codecs.put(BEST_COMPRESSION_CODEC, legacyBestCompressionCodec);

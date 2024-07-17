@@ -529,7 +529,7 @@ public class IndexService extends AbstractIndexComponent implements IndicesClust
                 this.indexSettings.getIndexSortConfig().hasIndexSort()
             );
             eventListener.onStoreCreated(shardId);
-            indexShard = new IndexShard(
+            indexShard = new IndexShard( // here
                 routing,
                 this.indexSettings,
                 path,

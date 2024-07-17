@@ -83,6 +83,7 @@ import org.elasticsearch.index.IndexModule;
 import org.elasticsearch.index.IndexSettings;
 import org.elasticsearch.index.IndexingPressure;
 import org.elasticsearch.index.MergePolicyConfig;
+import org.elasticsearch.index.mapper.CompletionFieldMapper;
 import org.elasticsearch.indices.IndexingMemoryController;
 import org.elasticsearch.indices.IndicesQueryCache;
 import org.elasticsearch.indices.IndicesRequestCache;
@@ -598,6 +599,7 @@ public final class ClusterSettings extends AbstractScopedSettings {
         TDigestExecutionHint.SETTING,
         MergePolicyConfig.DEFAULT_MAX_MERGED_SEGMENT_SETTING,
         MergePolicyConfig.DEFAULT_MAX_TIME_BASED_MERGED_SEGMENT_SETTING,
-        TransportService.ENABLE_STACK_OVERFLOW_AVOIDANCE
+        TransportService.ENABLE_STACK_OVERFLOW_AVOIDANCE,
+        CompletionFieldMapper.COMPLETION_FST_ON_HEAP
     ).filter(Objects::nonNull).collect(Collectors.toSet());
 }

@@ -762,7 +762,7 @@ class NodeConstruction {
         );
         MapperMetrics mapperMetrics = new MapperMetrics(sourceFieldMetrics);
 
-        IndicesService indicesService = new IndicesServiceBuilder().settings(settings)
+        IndicesService indicesService = new IndicesServiceBuilder().settings(settings) // here is where we construct
             .pluginsService(pluginsService)
             .nodeEnvironment(nodeEnvironment)
             .xContentRegistry(xContentRegistry)
