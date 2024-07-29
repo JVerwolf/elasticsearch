@@ -183,7 +183,8 @@ import static org.elasticsearch.index.IndexService.IndexCreationContext.CREATE_I
 import static org.elasticsearch.index.IndexService.IndexCreationContext.METADATA_VERIFICATION;
 import static org.elasticsearch.index.query.AbstractQueryBuilder.parseTopLevelQuery;
 import static org.elasticsearch.search.SearchService.ALLOW_EXPENSIVE_QUERIES;
-
+// This is the top, constructed at node startup. pass it into indicess service, pass it into indexService, indexshard, then codec
+// service, then perfieldmappercodec, then perfieldformatsupplier, then that's where we use.
 public class IndicesService extends AbstractLifecycleComponent
     implements
         IndicesClusterStateService.AllocatedIndices<IndexShard, IndexService>,
@@ -213,7 +214,7 @@ public class IndicesService extends AbstractLifecycleComponent
     /**
      * The node's settings.
      */
-    private final Settings settings;
+    private final Settings settings; // this has the node settings. pass down to the index service, the index shard, then codec service
     private final PluginsService pluginsService;
     private final NodeEnvironment nodeEnv;
     private final XContentParserConfiguration parserConfig;
@@ -756,7 +757,7 @@ public class IndicesService extends AbstractLifecycleComponent
         for (IndexEventListener listener : builtInListeners) {
             indexModule.addIndexEventListener(listener);
         }
-        return indexModule.newIndexService(
+        return indexModule.newIndexService( // here
             indexCreationContext,
             nodeEnv,
             parserConfig,

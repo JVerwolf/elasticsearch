@@ -59,6 +59,7 @@ public final class FetchPhase {
     }
 
     public void execute(SearchContext context, int[] docIdsToLoad, RankDocShardInfo rankDocs) {
+        LOGGER.warn("Potato org.elasticsearch.search.fetch.FetchPhase.execute");
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("{}", new SearchContextSourcePrinter(context));
         }

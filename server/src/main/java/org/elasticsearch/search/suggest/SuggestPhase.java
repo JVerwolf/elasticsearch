@@ -7,6 +7,8 @@
  */
 package org.elasticsearch.search.suggest;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.util.CharsRefBuilder;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.search.internal.SearchContext;
@@ -24,6 +26,7 @@ import java.util.Map;
  * Suggest phase of a search request, used to collect suggestions
  */
 public class SuggestPhase {
+    private static final Logger LOGGER = LogManager.getLogger(SuggestPhase.class); // todo remove
 
     private SuggestPhase() {}
 
@@ -33,6 +36,8 @@ public class SuggestPhase {
             return;
         }
         try {
+            LOGGER.warn("Potato org.elasticsearch.search.suggest.SuggestPhase.execute");
+
             CharsRefBuilder spare = new CharsRefBuilder();
             final List<Suggestion<? extends Entry<? extends Option>>> suggestions = new ArrayList<>(suggest.suggestions().size());
 

@@ -461,7 +461,7 @@ public final class IndexModule {
         }
     }
 
-    public IndexService newIndexService(
+    public IndexService newIndexService( // here
         IndexCreationContext indexCreationContext,
         NodeEnvironment environment,
         XContentParserConfiguration parserConfiguration,
@@ -509,7 +509,7 @@ public final class IndexModule {
             if (IndexService.needsMapperService(indexSettings, indexCreationContext)) {
                 indexAnalyzers = analysisRegistry.build(indexCreationContext, indexSettings);
             }
-            final IndexService indexService = new IndexService(
+            final IndexService indexService = new IndexService( // here
                 indexSettings,
                 indexCreationContext,
                 environment,

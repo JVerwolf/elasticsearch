@@ -8,7 +8,6 @@
 
 package org.elasticsearch.index.mapper;
 
-import org.apache.lucene.codecs.PostingsFormat;
 import org.elasticsearch.cluster.metadata.DataStream;
 import org.elasticsearch.cluster.metadata.InferenceFieldMetadata;
 import org.elasticsearch.index.IndexSettings;
@@ -282,15 +281,6 @@ public final class MappingLookup {
      */
     public Iterable<Mapper> fieldMappers() {
         return fieldMappers.values();
-    }
-
-    /**
-     * Gets the postings format for a particular field
-     * @param field the field to retrieve a postings format for
-     * @return the postings format for the field, or {@code null} if the default format should be used
-     */
-    public PostingsFormat getPostingsFormat(String field) {
-        return completionFields.contains(field) ? CompletionFieldMapper.postingsFormat() : null;
     }
 
     void checkLimits(IndexSettings settings) {

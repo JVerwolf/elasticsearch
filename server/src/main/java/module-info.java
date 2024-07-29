@@ -289,7 +289,8 @@ module org.elasticsearch.server {
         to
             org.elasticsearch.serverless.version,
             org.elasticsearch.serverless.buildinfo,
-            org.elasticsearch.serverless.constants;
+            org.elasticsearch.serverless.constants,
+            org.elasticsearch.serverless.codec, org.elasticsearch.stateless;
     exports org.elasticsearch.lucene.analysis.miscellaneous;
     exports org.elasticsearch.lucene.grouping;
     exports org.elasticsearch.lucene.queries;
@@ -389,12 +390,16 @@ module org.elasticsearch.server {
     exports org.elasticsearch.action.datastreams.lifecycle;
     exports org.elasticsearch.action.datastreams.autosharding;
     exports org.elasticsearch.action.downsample;
+    // We need to have a qualified exports
+    // This makes it so that plugins cannot go implement these classes as they cannot get at the interface.
+    // it could go here, or next to where the completion field mapper is, as long as it's in an additional package with qualified export that only sends it to serverless
     exports org.elasticsearch.plugins.internal
         to
             org.elasticsearch.metering,
             org.elasticsearch.stateless,
             org.elasticsearch.settings.secure,
             org.elasticsearch.serverless.constants,
+            org.elasticsearch.serverless.codec,
             org.elasticsearch.serverless.apifiltering,
             org.elasticsearch.internal.security;
 
@@ -415,6 +420,7 @@ module org.elasticsearch.server {
     uses org.elasticsearch.node.internal.TerminationHandlerProvider;
     uses org.elasticsearch.internal.VersionExtension;
     uses org.elasticsearch.internal.BuildExtension;
+    uses org.elasticsearch.internal.CompletionPostingsExtension;
     uses org.elasticsearch.features.FeatureSpecification;
     uses org.elasticsearch.plugins.internal.LoggingDataProvider;
     uses org.elasticsearch.cluster.metadata.DataStreamFactoryRetention;

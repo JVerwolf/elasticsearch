@@ -23,6 +23,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.VectorUtil;
 import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.BigArrays;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.index.IndexVersion;
@@ -1261,7 +1262,7 @@ public class DenseVectorFieldMapperTests extends MapperTestCase {
             }
             b.endObject();
         }));
-        CodecService codecService = new CodecService(mapperService, BigArrays.NON_RECYCLING_INSTANCE);
+        CodecService codecService = new CodecService(mapperService, BigArrays.NON_RECYCLING_INSTANCE, Settings.EMPTY);
         Codec codec = codecService.codec("default");
         KnnVectorsFormat knnVectorsFormat;
         if (CodecService.ZSTD_STORED_FIELDS_FEATURE_FLAG.isEnabled()) {
@@ -1296,7 +1297,7 @@ public class DenseVectorFieldMapperTests extends MapperTestCase {
                 }
                 b.endObject();
             }));
-            CodecService codecService = new CodecService(mapperService, BigArrays.NON_RECYCLING_INSTANCE);
+            CodecService codecService = new CodecService(mapperService, BigArrays.NON_RECYCLING_INSTANCE, Settings.EMPTY);
             Codec codec = codecService.codec("default");
             KnnVectorsFormat knnVectorsFormat;
             if (CodecService.ZSTD_STORED_FIELDS_FEATURE_FLAG.isEnabled()) {
@@ -1339,7 +1340,7 @@ public class DenseVectorFieldMapperTests extends MapperTestCase {
             }
             b.endObject();
         }));
-        CodecService codecService = new CodecService(mapperService, BigArrays.NON_RECYCLING_INSTANCE);
+        CodecService codecService = new CodecService(mapperService, BigArrays.NON_RECYCLING_INSTANCE, Settings.EMPTY);
         Codec codec = codecService.codec("default");
         KnnVectorsFormat knnVectorsFormat;
         if (CodecService.ZSTD_STORED_FIELDS_FEATURE_FLAG.isEnabled()) {
@@ -1380,7 +1381,7 @@ public class DenseVectorFieldMapperTests extends MapperTestCase {
             }
             b.endObject();
         }));
-        CodecService codecService = new CodecService(mapperService, BigArrays.NON_RECYCLING_INSTANCE);
+        CodecService codecService = new CodecService(mapperService, BigArrays.NON_RECYCLING_INSTANCE, Settings.EMPTY);
         Codec codec = codecService.codec("default");
         KnnVectorsFormat knnVectorsFormat;
         if (CodecService.ZSTD_STORED_FIELDS_FEATURE_FLAG.isEnabled()) {

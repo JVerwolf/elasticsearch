@@ -15,7 +15,7 @@ import org.elasticsearch.env.BuildVersion;
  * Allows plugging in current build info.
  */
 public interface BuildExtension {
-
+    // this is an example of a pure java SPI
     /**
      * Returns the {@link Build} that represents the running Elasticsearch code.
      */

@@ -8,17 +8,21 @@
 
 package org.elasticsearch.index.codec;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.codecs.DocValuesFormat;
 import org.apache.lucene.codecs.KnnVectorsFormat;
 import org.apache.lucene.codecs.PostingsFormat;
 import org.apache.lucene.codecs.lucene90.Lucene90DocValuesFormat;
 import org.apache.lucene.codecs.lucene99.Lucene99HnswVectorsFormat;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.BigArrays;
 import org.elasticsearch.index.IndexMode;
 import org.elasticsearch.index.IndexSettings;
 import org.elasticsearch.index.codec.bloomfilter.ES87BloomFilterPostingsFormat;
 import org.elasticsearch.index.codec.postings.ES812PostingsFormat;
 import org.elasticsearch.index.codec.tsdb.ES87TSDBDocValuesFormat;
+import org.elasticsearch.index.mapper.CompletionFieldMapper;
 import org.elasticsearch.index.mapper.IdFieldMapper;
 import org.elasticsearch.index.mapper.Mapper;
 import org.elasticsearch.index.mapper.MapperService;
@@ -31,6 +35,7 @@ import java.util.Objects;
  * vectors.
  */
 public class PerFieldFormatSupplier {
+    private static final Logger logger = LogManager.getLogger(PerFieldFormatSupplier.class); // todo remove
 
     private final MapperService mapperService;
     private final BigArrays bigArrays;
@@ -38,29 +43,33 @@ public class PerFieldFormatSupplier {
     private final KnnVectorsFormat knnVectorsFormat = new Lucene99HnswVectorsFormat();
     private final ES87BloomFilterPostingsFormat bloomFilterPostingsFormat;
     private final ES87TSDBDocValuesFormat tsdbDocValuesFormat;
+    private final Settings nodeSettings;
 
     private final ES812PostingsFormat es812PostingsFormat;
 
-    public PerFieldFormatSupplier(MapperService mapperService, BigArrays bigArrays) {
+    public PerFieldFormatSupplier(MapperService mapperService, BigArrays bigArrays, Settings nodeSettings) {
         this.mapperService = mapperService;
         this.bigArrays = Objects.requireNonNull(bigArrays);
         this.bloomFilterPostingsFormat = new ES87BloomFilterPostingsFormat(bigArrays, this::internalGetPostingsFormatForField);
         this.tsdbDocValuesFormat = new ES87TSDBDocValuesFormat();
         this.es812PostingsFormat = new ES812PostingsFormat();
+        this.nodeSettings = nodeSettings;
     }
 
-    public PostingsFormat getPostingsFormatForField(String field) {
+    public PostingsFormat getPostingsFormatForField(String field) { // here
+        logger.warn("potato org.elasticsearch.index.codec.PerFieldFormatSupplier.getPostingsFormatForField");
         if (useBloomFilter(field)) {
-            return bloomFilterPostingsFormat;
+            return bloomFilterPostingsFormat; // Todo is this needed?
         }
         return internalGetPostingsFormatForField(field);
     }
 
     private PostingsFormat internalGetPostingsFormatForField(String field) {
+        logger.warn("potato internalGetPostingsFormatForField");
         if (mapperService != null) {
-            final PostingsFormat format = mapperService.mappingLookup().getPostingsFormat(field);
-            if (format != null) {
-                return format;
+            Mapper mapper = mapperService.mappingLookup().getMapper(field);
+            if (mapper instanceof CompletionFieldMapper) {
+                return CompletionFieldMapper.getPostingsFormat(nodeSettings);
             }
         }
         // return our own posting format using PFOR

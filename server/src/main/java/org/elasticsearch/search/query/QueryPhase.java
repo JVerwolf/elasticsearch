@@ -117,6 +117,7 @@ public class QueryPhase {
     }
 
     static void executeQuery(SearchContext searchContext) throws QueryPhaseExecutionException {
+        LOGGER.warn("Potato org.elasticsearch.search.query.QueryPhase.executeQuery");
         if (searchContext.hasOnlySuggest()) {
             SuggestPhase.execute(searchContext);
             searchContext.queryResult().topDocs(new TopDocsAndMaxScore(Lucene.EMPTY_TOP_DOCS, Float.NaN), new DocValueFormat[0]);

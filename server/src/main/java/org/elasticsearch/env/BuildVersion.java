@@ -96,7 +96,18 @@ public abstract class BuildVersion {
 
     private static class CurrentExtensionHolder {
         private static final BuildExtension BUILD_EXTENSION = findExtension();
+        // here, if we don't find it, we load it.  This is pure java spi.
+        // The important thing is that if you call service loader.load, it will only look on the classpath
+        // not in plugins, as we don't have that on the classpath
+        /*
+        - In Serverless, we have a couple jars which we dump on the classpath when we are setting up servlerss
+            - e.g. build.
+            - We can do this since we know the build information, so it can be static. It doesn't depend on anything
+            - my example can be similar, since it doesn't depend on a loaded plugin. (wait, it might, due to needing to know if it's an
+            index node)
+            -
 
+         */
         private static BuildExtension findExtension() {
             return ExtensionLoader.loadSingleton(ServiceLoader.load(BuildExtension.class)).orElse(new DefaultBuildExtension());
         }

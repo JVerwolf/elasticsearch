@@ -8,6 +8,8 @@
 
 package org.elasticsearch.index.codec;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.codecs.DocValuesFormat;
 import org.apache.lucene.codecs.KnnVectorsFormat;
 import org.apache.lucene.codecs.PostingsFormat;
@@ -26,6 +28,7 @@ import org.elasticsearch.index.codec.zstd.Zstd814StoredFieldsFormat;
  * {@link Zstd814StoredFieldsFormat}.
  */
 public class Elasticsearch814Codec extends CodecService.DeduplicateFieldInfosCodec {
+    private static final Logger logger = LogManager.getLogger(Elasticsearch814Codec.class); // todo remove
 
     private final StoredFieldsFormat storedFieldsFormat;
 
@@ -33,6 +36,8 @@ public class Elasticsearch814Codec extends CodecService.DeduplicateFieldInfosCod
     private final PostingsFormat postingsFormat = new PerFieldPostingsFormat() {
         @Override
         public PostingsFormat getPostingsFormatForField(String field) {
+            logger.warn("potato org.apache.lucene.codecs.perfield.PerFieldPostingsFormat.getPostingsFormatForField");
+//            throw new RuntimeException("Potato");
             return Elasticsearch814Codec.this.getPostingsFormatForField(field);
         }
     };
@@ -56,6 +61,7 @@ public class Elasticsearch814Codec extends CodecService.DeduplicateFieldInfosCod
     /** Public no-arg constructor, needed for SPI loading at read-time. */
     public Elasticsearch814Codec() {
         this(Zstd814StoredFieldsFormat.Mode.BEST_SPEED);
+        logger.warn("potato org.elasticsearch.index.codec.Elasticsearch814Codec.Elasticsearch814Codec()");
     }
 
     /**
@@ -68,6 +74,7 @@ public class Elasticsearch814Codec extends CodecService.DeduplicateFieldInfosCod
         this.defaultPostingsFormat = new Lucene99PostingsFormat();
         this.defaultDVFormat = new Lucene90DocValuesFormat();
         this.defaultKnnVectorsFormat = new Lucene99HnswVectorsFormat();
+        logger.warn("potato org.elasticsearch.index.codec.Elasticsearch814Codec.Elasticsearch814Codec(mode)");
     }
 
     @Override
