@@ -17,14 +17,10 @@ import org.elasticsearch.gradle.testclusters.TestClustersPlugin;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 
 import static org.elasticsearch.gradle.internal.util.ParamsUtils.loadBuildParams;
 
 public class InternalTestClustersPlugin implements Plugin<Project> {
-
-    private static final Logger logger = Logging.getLogger(InternalTestClustersPlugin.class);
 
     @Override
     public void apply(Project project) {
@@ -43,9 +39,10 @@ public class InternalTestClustersPlugin implements Plugin<Project> {
             NamedDomainObjectContainer<ElasticsearchCluster> testClusters = (NamedDomainObjectContainer<ElasticsearchCluster>) project
                 .getExtensions()
                 .getByName(TestClustersPlugin.EXTENSION_NAME);
-            testClusters.configureEach(elasticsearchCluster -> elasticsearchCluster.setting("node.processors", "1"));
-            testClusters.configureEach(elasticsearchCluster -> elasticsearchCluster.setting("node.vcpu_request", "1"));
-            logger.info("Configuring test clusters with one processor");
+            testClusters.configureEach(elasticsearchCluster -> {
+                elasticsearchCluster.setting("node.processors", "1");
+                elasticsearchCluster.setting("node.vcpu_request", "1");
+            });
         }
     }
 
