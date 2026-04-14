@@ -7,6 +7,7 @@
 
 environments:
   qa:
+    # Kibana overview URL — ES endpoints are discovered automatically via /_remote/info
     clusters: qa-clusters.txt
   prod:
     clusters: prod-clusters.txt

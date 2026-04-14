@@ -2,14 +2,15 @@
 Authentication helpers for the OTel trace migration scanner.
 
 API keys are stored in api-keys.json (gitignored) as a dict mapping
-normalized ES URLs to API key strings:
+normalized Kibana URLs to API key strings:
 
     {
-      "https://my-cluster.es.us-central1.gcp.qa.cld.elstc.co:9243": "VGhpcyBpcyBhIGZha2U..."
+      "https://overview.qa.cld.elstc.co": "VGhpcyBpcyBhIGZha2U..."
     }
 
 The API key value should be the base64-encoded "id:api_key" string
-suitable for use in the "Authorization: ApiKey <value>" header.
+from Kibana → Stack Management → API Keys.  The same key is used for
+both Kibana authentication and proxied ES requests.
 """
 
 import json
@@ -20,7 +21,7 @@ _API_KEYS_FILE = Path(__file__).parent / "api-keys.json"
 
 
 def _normalize_url(url: str) -> str:
-    """Normalize an ES URL for use as a key in api-keys.json."""
+    """Normalize a URL for use as a key in api-keys.json."""
     url = url.strip().rstrip("/")
     if "://" not in url:
         url = "https://" + url
@@ -45,36 +46,34 @@ def save_api_keys(keys: dict[str, str]) -> None:
     os.chmod(_API_KEYS_FILE, 0o600)
 
 
-def get_api_key(es_url: str) -> str | None:
-    """Return the stored API key for the given ES URL, or None if not found."""
-    normalized = _normalize_url(es_url)
+def get_api_key(kibana_url: str) -> str | None:
+    """Return the stored API key for the given Kibana URL, or None if not found."""
+    normalized = _normalize_url(kibana_url)
     keys = load_api_keys()
     return keys.get(normalized)
 
 
-def set_api_key(es_url: str, api_key: str) -> None:
-    """Persist an API key for the given ES URL."""
-    normalized = _normalize_url(es_url)
+def set_api_key(kibana_url: str, api_key: str) -> None:
+    """Persist an API key for the given Kibana URL."""
+    normalized = _normalize_url(kibana_url)
     keys = load_api_keys()
     keys[normalized] = api_key
     save_api_keys(keys)
 
 
-def auth_headers(es_url: str) -> dict[str, str]:
+def get_api_key_or_raise(kibana_url: str) -> str:
     """
-    Return HTTP headers for authenticating to the given ES cluster.
+    Return the stored API key for the given Kibana URL.
 
-    Raises RuntimeError if no API key is configured for this cluster.
-    Prompt the user to add one with:
-        python otm.py <env> add-key <es_url> <api_key>
+    Raises RuntimeError if no key is configured.  Directs the user to add one.
     """
-    key = get_api_key(es_url)
+    key = get_api_key(kibana_url)
     if key is None:
         raise RuntimeError(
-            f"No API key found for {es_url}.\n"
+            f"No API key found for {kibana_url}.\n"
             "Add one with:\n"
-            f"  ./otm <env> add-key {es_url} <your-api-key>\n"
-            "The API key should be the base64-encoded 'id:key' string "
-            "from Kibana → Stack Management → API Keys."
+            f"  ./otm <env> add-key {kibana_url} <your-api-key>\n"
+            "Create the key in Kibana → Stack Management → API Keys.\n"
+            "Required ES privileges: cluster:monitor, index read+view_index_metadata on traces-apm*"
         )
-    return {"Authorization": f"ApiKey {key}"}
+    return key

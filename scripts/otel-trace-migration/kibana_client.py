@@ -1,0 +1,127 @@
+"""
+Kibana client for the OTel trace migration scanner.
+
+All Elasticsearch queries are routed through Kibana's console proxy endpoint:
+  POST /api/console/proxy?path=<es-path>&method=<GET|POST>
+
+This means one Kibana API key is sufficient for the entire scan — no separate
+ES API key is needed.  Cross-cluster search (CCS) is handled transparently:
+remote cluster names are prefixed onto index patterns automatically, and
+Kibana/ES handles the routing.
+"""
+
+from __future__ import annotations
+
+import urllib.parse
+
+import requests
+
+DEFAULT_TIMEOUT = 60  # seconds
+
+
+class KibanaClient:
+    def __init__(self, kibana_url: str, api_key: str, timeout: int = DEFAULT_TIMEOUT):
+        self.kibana_url = kibana_url.rstrip("/")
+        self.timeout = timeout
+        self.session = requests.Session()
+        self.session.headers.update(
+            {
+                "Authorization": f"ApiKey {api_key}",
+                "kbn-xsrf": "true",
+                "Content-Type": "application/json",
+            }
+        )
+
+    # ------------------------------------------------------------------
+    # Kibana API helpers
+    # ------------------------------------------------------------------
+
+    def kibana_get(self, path: str) -> dict:
+        url = f"{self.kibana_url}/{path.lstrip('/')}"
+        resp = self.session.get(url, timeout=self.timeout)
+        resp.raise_for_status()
+        return resp.json()
+
+    # ------------------------------------------------------------------
+    # ES proxy helpers (routes through /api/console/proxy)
+    # ------------------------------------------------------------------
+
+    def _proxy(self, method: str, es_path: str, body: dict | None = None) -> dict:
+        """Send an ES request through Kibana's console proxy."""
+        url = f"{self.kibana_url}/api/console/proxy"
+        params = {"path": es_path, "method": method}
+        resp = self.session.post(url, params=params, json=body or {}, timeout=self.timeout)
+        resp.raise_for_status()
+        return resp.json()
+
+    def es_get(self, es_path: str) -> dict:
+        return self._proxy("GET", es_path)
+
+    def es_post(self, es_path: str, body: dict) -> dict:
+        return self._proxy("POST", es_path, body)
+
+    # ------------------------------------------------------------------
+    # Cluster discovery
+    # ------------------------------------------------------------------
+
+    def get_local_cluster_info(self) -> dict:
+        """Return basic info about the local ES cluster Kibana is connected to."""
+        return self.es_get("/")
+
+    def get_remote_clusters(self) -> dict[str, dict]:
+        """
+        Return info about CCS remote clusters via GET /_remote/info.
+
+        Keys are remote cluster names; values contain connection state.
+        Returns {} if no remote clusters are configured or the call fails.
+        """
+        try:
+            return self.es_get("/_remote/info")
+        except Exception:
+            return {}
+
+    def discover_cluster_names(self) -> list[str | None]:
+        """
+        Return a list of cluster identifiers to scan.
+
+        None  → local cluster (no CCS prefix needed)
+        str   → remote cluster name (used as CCS prefix, e.g. "remote1:traces-apm*")
+
+        Only connected remote clusters are included.
+        """
+        clusters: list[str | None] = [None]
+        remote_info = self.get_remote_clusters()
+        for name, info in remote_info.items():
+            if info.get("connected", False):
+                clusters.append(name)
+        return clusters
+
+    # ------------------------------------------------------------------
+    # ES query wrappers (cluster-aware)
+    # ------------------------------------------------------------------
+
+    def _index_path(self, index_pattern: str, cluster: str | None) -> str:
+        """Build an index path, prepending the CCS cluster prefix if given."""
+        if cluster:
+            return f"{cluster}:{index_pattern}"
+        return index_pattern
+
+    def field_caps(self, index_pattern: str, cluster: str | None = None) -> dict:
+        """
+        Call _field_caps and return the 'fields' dict.
+
+        include_empty_fields=false means only fields with actual data are returned,
+        which keeps the report focused on what's actually present.
+        """
+        path = f"{self._index_path(index_pattern, cluster)}/_field_caps?include_empty_fields=false"
+        result = self.es_get(path)
+        return result.get("fields", {})
+
+    def count(self, index_pattern: str, cluster: str | None = None) -> int:
+        """Return the document count in the given index pattern."""
+        path = f"{self._index_path(index_pattern, cluster)}/_count"
+        try:
+            result = self.es_get(path)
+            return result.get("count", 0)
+        except Exception:
+            return 0

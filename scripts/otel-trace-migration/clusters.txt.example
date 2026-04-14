@@ -1,8 +1,10 @@
-# Example cluster list file.
-# Copy this to qa-clusters.txt or prod-clusters.txt and add your cluster URLs.
-# One Elasticsearch URL per line. Lines starting with # are ignored.
+# Kibana overview cluster URL.
+# The scanner connects here and discovers all ES clusters automatically:
+#   - The local ES cluster Kibana is connected to
+#   - Any CCS remote clusters returned by GET /_remote/info (connected=true)
+#
+# One Kibana URL per line. Lines starting with # are ignored.
 # Credentials are stored separately in api-keys.json (see auth.py).
 #
-# Format: https://<host>:<port>
 # Example:
-# https://o11y-es.us-central1.gcp.qa.cld.elstc.co:9243
+# https://overview.qa.cld.elstc.co
