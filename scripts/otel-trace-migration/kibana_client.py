@@ -12,7 +12,7 @@ Kibana/ES handles the routing.
 
 from __future__ import annotations
 
-import urllib.parse
+from __future__ import annotations
 
 import requests
 

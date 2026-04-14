@@ -13,6 +13,8 @@ from Kibana → Stack Management → API Keys.  The same key is used for
 both Kibana authentication and proxied ES requests.
 """
 
+from __future__ import annotations
+
 import json
 import os
 from pathlib import Path
