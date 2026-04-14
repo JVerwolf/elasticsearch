@@ -4,13 +4,14 @@ Kibana client for the OTel trace migration scanner.
 All Elasticsearch queries are routed through Kibana's console proxy endpoint:
   POST /api/console/proxy?path=<es-path>&method=<GET|POST>
 
+IMPORTANT: the console proxy rejects paths that begin with '/'.
+All es_path values must be passed WITHOUT a leading slash.
+
 This means one Kibana API key is sufficient for the entire scan — no separate
 ES API key is needed.  Cross-cluster search (CCS) is handled transparently:
 remote cluster names are prefixed onto index patterns automatically, and
 Kibana/ES handles the routing.
 """
-
-from __future__ import annotations
 
 from __future__ import annotations
 
@@ -47,7 +48,13 @@ class KibanaClient:
     # ------------------------------------------------------------------
 
     def _proxy(self, method: str, es_path: str, body: dict | None = None) -> dict:
-        """Send an ES request through Kibana's console proxy."""
+        """
+        Send an ES request through Kibana's console proxy.
+
+        es_path must NOT begin with '/'; the proxy returns 400 if it does.
+        """
+        # Strip leading slash — the console proxy requires bare paths.
+        es_path = es_path.lstrip("/")
         url = f"{self.kibana_url}/api/console/proxy"
         params = {"path": es_path, "method": method}
         resp = self.session.post(url, params=params, json=body or {}, timeout=self.timeout)
@@ -65,20 +72,23 @@ class KibanaClient:
     # ------------------------------------------------------------------
 
     def get_local_cluster_info(self) -> dict:
-        """Return basic info about the local ES cluster Kibana is connected to."""
-        return self.es_get("/")
+        """
+        Return basic info about the local ES cluster Kibana is connected to.
+
+        Uses _cluster/health (not GET /) because the console proxy rejects '/'.
+        Returns cluster_name and status; version is not available this way.
+        """
+        return self.es_get("_cluster/health")
 
     def get_remote_clusters(self) -> dict[str, dict]:
         """
-        Return info about CCS remote clusters via GET /_remote/info.
+        Return info about CCS remote clusters via GET _remote/info.
 
         Keys are remote cluster names; values contain connection state.
-        Returns {} if no remote clusters are configured or the call fails.
+        Raises on failure so callers can surface the error rather than
+        silently treating it as "no remotes".
         """
-        try:
-            return self.es_get("/_remote/info")
-        except Exception:
-            return {}
+        return self.es_get("_remote/info")
 
     def discover_cluster_names(self) -> list[str | None]:
         """
@@ -120,8 +130,5 @@ class KibanaClient:
     def count(self, index_pattern: str, cluster: str | None = None) -> int:
         """Return the document count in the given index pattern."""
         path = f"{self._index_path(index_pattern, cluster)}/_count"
-        try:
-            result = self.es_get(path)
-            return result.get("count", 0)
-        except Exception:
-            return 0
+        result = self.es_get(path)
+        return result.get("count", 0)

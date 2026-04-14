@@ -66,8 +66,8 @@ def scan_cluster(
         try:
             info = client.get_local_cluster_info()
             cluster_name = info.get("cluster_name", "local")
-            cluster_version = info.get("version", {}).get("number", "unknown")
-            print(f"      Name: {cluster_name}  (ES {cluster_version})", flush=True)
+            # _cluster/health doesn't return version; just show cluster name
+            print(f"      Name: {cluster_name}", flush=True)
         except Exception as exc:
             print(f"      WARNING: could not fetch cluster info: {exc}", flush=True)
 
@@ -128,11 +128,12 @@ def scan_kibana(kibana_url: str, config: dict) -> list[ScanResult]:
     client = KibanaClient(kibana_url, api_key)
 
     # Discover clusters
-    print("  Discovering clusters via /_remote/info …", flush=True)
+    print("  Discovering clusters via _remote/info …", flush=True)
     try:
         clusters = client.discover_cluster_names()
     except Exception as exc:
-        print(f"  WARNING: cluster discovery failed: {exc}", flush=True)
+        print(f"  ERROR: cluster discovery failed: {exc}", flush=True)
+        print("  Falling back to local cluster only.", flush=True)
         clusters = [None]
 
     remote_names = [c for c in clusters if c is not None]
