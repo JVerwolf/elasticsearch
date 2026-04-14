@@ -1,0 +1,51 @@
+# OTel Trace Migration Scanner Configuration
+#
+# This tool connects to an Elasticsearch observability cluster and scans
+# traces-apm* indices to discover all span attributes currently in use.
+# The goal is to verify that the APM agent → OTel SDK migration preserves
+# all attributes that downstream tooling depends on.
+
+environments:
+  qa:
+    clusters: qa-clusters.txt
+  prod:
+    clusters: prod-clusters.txt
+
+# Index pattern to scan for trace data.
+# APM agent data lands in traces-apm* data streams.
+index_pattern: "traces-apm*"
+
+# Service name filter - set to scan only ES-originated spans.
+# Leave empty to scan all services in the cluster.
+# service_name_filter: "elasticsearch"
+
+# Span attributes that the Elasticsearch APM instrumentation is known to set
+# (from server/src/main/java/org/elasticsearch/telemetry/tracing/Tracer.java
+# and related code). Used to verify coverage in the scanned data.
+#
+# Format: key is the OTel attribute name, value is a description.
+expected_attributes:
+  # Set by APMTracer.setSpanAttributes() on every span
+  es.node.name: "Name of the Elasticsearch node that handled the request"
+  es.cluster.name: "Name of the Elasticsearch cluster"
+
+  # Set by APMTracer.setSpanAttributes() when X-Opaque-ID header is present
+  es.x-opaque-id: "Value of the X-Opaque-ID HTTP request header (if provided)"
+
+  # Set by RestController.startTrace() for REST request spans
+  http.method: "HTTP method (GET, POST, PUT, DELETE, etc.)"
+  http.url: "Full HTTP request URI"
+  http.flavour: "HTTP protocol version (1.0 or 1.1)"
+
+  # Set by DefaultRestChannel.sendResponse() on REST response
+  http.status_code: "HTTP response status code"
+
+  # Set by TaskManager.maybeStartTrace() for task-based spans
+  es.task.id: "Elasticsearch task ID"
+  es.task.parent.id: "Elasticsearch parent task ID (if task is a child task)"
+
+  # Dynamic: http.request.headers.<name> and http.response.headers.<name>
+  # These are set for individual HTTP headers; exact keys depend on which
+  # headers are present in the request/response.
+  http.request.headers.*: "Individual HTTP request headers (lowercased, hyphens→underscores)"
+  http.response.headers.*: "Individual HTTP response headers (lowercased, hyphens→underscores)"

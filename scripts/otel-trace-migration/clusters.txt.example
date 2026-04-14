@@ -1,0 +1,8 @@
+# Example cluster list file.
+# Copy this to qa-clusters.txt or prod-clusters.txt and add your cluster URLs.
+# One Elasticsearch URL per line. Lines starting with # are ignored.
+# Credentials are stored separately in api-keys.json (see auth.py).
+#
+# Format: https://<host>:<port>
+# Example:
+# https://o11y-es.us-central1.gcp.qa.cld.elstc.co:9243
