@@ -59,8 +59,15 @@ class KibanaClient:
         """
         es_path = es_path.lstrip("/")
         url = f"{self.kibana_url}/api/console/proxy?path={es_path}&method={method}"
-        resp = self.session.post(url, json=body or {}, timeout=self.timeout)
-        resp.raise_for_status()
+        kwargs: dict = {"timeout": self.timeout}
+        if body:
+            kwargs["json"] = body
+        resp = self.session.post(url, **kwargs)
+        if not resp.ok:
+            raise requests.HTTPError(
+                f"{resp.status_code} {resp.reason} for url: {resp.url}\nResponse body: {resp.text[:500]}",
+                response=resp,
+            )
         return resp.json()
 
     def es_get(self, es_path: str) -> dict:
