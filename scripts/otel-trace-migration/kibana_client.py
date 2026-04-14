@@ -1,14 +1,19 @@
 """
-Elasticsearch client for the OTel trace migration scanner.
+Kibana client for the OTel trace migration scanner.
 
-Connects directly to an Elasticsearch cluster (the overview cluster at
-overview.qa.cld.elstc.co in QA).  The overview cluster has CCS configured
-to all remote clusters, so cross-cluster queries work transparently.
+All Elasticsearch queries are routed through Kibana's console proxy endpoint:
+  POST /api/console/proxy?path=<url-encoded-es-path>&method=<GET|POST>
 
-NOTE: Despite the module name (kept for compatibility), this talks directly
-to ES, not through a Kibana console proxy.  The overview URL turned out to be
-an ES endpoint — the /api/console/proxy approach was rejected because that
-Kibana feature is disabled on the overview instance.
+This matches exactly what the Kibana browser Dev Console sends.  The path
+parameter is URL-encoded (/ → %2F, * → %2A, etc.) by requests' params= dict,
+which is the format the proxy expects.
+
+AUTHENTICATION: this endpoint requires a Kibana API key with the Dev Tools
+feature privilege — an ES-only API key (created via POST /_security/api_key)
+is not sufficient.  Create the key in Kibana UI:
+  Stack Management → Security → API Keys → Create API key
+  → Kibana privileges → Dev Tools → All (or Read)
+  → Elasticsearch privileges → cluster: monitor, indices: read+view_index_metadata on traces-apm*
 """
 
 from __future__ import annotations
@@ -19,45 +24,48 @@ DEFAULT_TIMEOUT = 60  # seconds
 
 
 class KibanaClient:
-    """
-    Thin ES REST client.  Named KibanaClient for import compatibility;
-    it now speaks directly to Elasticsearch.
-    """
-
     def __init__(self, kibana_url: str, api_key: str, timeout: int = DEFAULT_TIMEOUT):
-        self.kibana_url = kibana_url.rstrip("/")  # the ES base URL
+        self.kibana_url = kibana_url.rstrip("/")
         self.timeout = timeout
         self.session = requests.Session()
         self.session.headers.update(
             {
                 "Authorization": f"ApiKey {api_key}",
+                "kbn-xsrf": "true",
                 "Content-Type": "application/json",
             }
         )
 
     # ------------------------------------------------------------------
-    # Raw ES helpers
+    # ES proxy helpers (routes through /api/console/proxy)
     # ------------------------------------------------------------------
 
-    def es_get(self, es_path: str) -> dict:
-        url = f"{self.kibana_url}/{es_path.lstrip('/')}"
-        resp = self.session.get(url, timeout=self.timeout)
+    def _proxy(self, method: str, es_path: str, body: dict | None = None) -> dict:
+        """
+        Send an ES request through Kibana's console proxy.
+
+        Uses requests params= so the path is URL-encoded (matching browser behavior).
+        Requires a Kibana API key with Dev Tools privilege.
+        """
+        es_path = es_path.lstrip("/")
+        url = f"{self.kibana_url}/api/console/proxy"
+        params = {"path": es_path, "method": method}
+        kwargs: dict = {"params": params, "timeout": self.timeout}
+        if body:
+            kwargs["json"] = body
+        resp = self.session.post(url, **kwargs)
         if not resp.ok:
             raise requests.HTTPError(
-                f"{resp.status_code} {resp.reason} — {resp.text[:300]}",
+                f"{resp.status_code} {resp.reason} — {resp.text[:400]}",
                 response=resp,
             )
         return resp.json()
 
+    def es_get(self, es_path: str) -> dict:
+        return self._proxy("GET", es_path)
+
     def es_post(self, es_path: str, body: dict) -> dict:
-        url = f"{self.kibana_url}/{es_path.lstrip('/')}"
-        resp = self.session.post(url, json=body, timeout=self.timeout)
-        if not resp.ok:
-            raise requests.HTTPError(
-                f"{resp.status_code} {resp.reason} — {resp.text[:300]}",
-                response=resp,
-            )
-        return resp.json()
+        return self._proxy("POST", es_path, body)
 
     # ------------------------------------------------------------------
     # Cluster discovery
@@ -67,20 +75,14 @@ class KibanaClient:
         return self.es_get("_cluster/health")
 
     def get_remote_clusters(self) -> dict[str, dict]:
-        """
-        Return CCS remote clusters via GET _remote/info.
-        Raises on failure so the caller surfaces the error.
-        """
+        """Return CCS remote clusters via GET _remote/info. Raises on failure."""
         return self.es_get("_remote/info")
 
     def discover_cluster_names(self) -> list[str | None]:
         """
-        Return a list of cluster identifiers to scan.
-
-        None  → local cluster (no CCS prefix needed)
-        str   → remote cluster name (e.g. "monitor-aws-eu-west-1")
-
-        Only connected remote clusters are included.
+        Return cluster identifiers to scan.
+        None = local cluster; str = CCS remote cluster name.
+        Only connected remotes are included.
         """
         clusters: list[str | None] = [None]
         remote_info = self.get_remote_clusters()
