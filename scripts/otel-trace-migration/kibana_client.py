@@ -52,12 +52,14 @@ class KibanaClient:
         Send an ES request through Kibana's console proxy.
 
         es_path must NOT begin with '/'; the proxy returns 400 if it does.
+
+        We build the query string manually rather than using requests' params=
+        because requests URL-encodes the path value (/ → %2F, * → %2A, etc.)
+        and the console proxy requires literal slashes and wildcards in the path.
         """
-        # Strip leading slash — the console proxy requires bare paths.
         es_path = es_path.lstrip("/")
-        url = f"{self.kibana_url}/api/console/proxy"
-        params = {"path": es_path, "method": method}
-        resp = self.session.post(url, params=params, json=body or {}, timeout=self.timeout)
+        url = f"{self.kibana_url}/api/console/proxy?path={es_path}&method={method}"
+        resp = self.session.post(url, json=body or {}, timeout=self.timeout)
         resp.raise_for_status()
         return resp.json()
 
