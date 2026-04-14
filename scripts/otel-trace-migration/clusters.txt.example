@@ -1,9 +1,11 @@
-# Kibana overview cluster URL.
-# The scanner connects here and discovers all ES clusters automatically:
-#   - The local ES cluster Kibana is connected to
-#   - Any CCS remote clusters returned by GET /_remote/info (connected=true)
+# Elasticsearch overview cluster URL.
+# This is a direct ES endpoint — NOT a Kibana URL.
+# The overview cluster has CCS configured to all remote clusters, so the
+# scanner discovers and queries them all through a single connection:
+#   - The local cluster (queried directly)
+#   - Any CCS remote clusters returned by GET _remote/info (connected=true)
 #
-# One Kibana URL per line. Lines starting with # are ignored.
+# One ES URL per line. Lines starting with # are ignored.
 # Credentials are stored separately in api-keys.json (see auth.py).
 #
 # Example:

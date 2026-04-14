@@ -2,15 +2,14 @@
 Authentication helpers for the OTel trace migration scanner.
 
 API keys are stored in api-keys.json (gitignored) as a dict mapping
-normalized Kibana URLs to API key strings:
+normalized ES cluster URLs to API key strings:
 
     {
       "https://overview.qa.cld.elstc.co": "VGhpcyBpcyBhIGZha2U..."
     }
 
 The API key value should be the base64-encoded "id:api_key" string
-from Kibana → Stack Management → API Keys.  The same key is used for
-both Kibana authentication and proxied ES requests.
+("encoded" field) from POST /_security/api_key run in the Kibana Dev Console.
 """
 
 from __future__ import annotations
