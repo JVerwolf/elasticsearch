@@ -129,6 +129,50 @@ def build_report(env: str, config: dict, scan_results: list[ScanResult]) -> dict
     }
 
 
+def run_from_file(env: str, config: dict, path: Path) -> None:
+    """Process a pre-exported _field_caps JSON response and write a report."""
+    if not path.exists():
+        print(f"ERROR: File not found: {path}", file=sys.stderr)
+        sys.exit(1)
+
+    with open(path) as f:
+        raw = json.load(f)
+
+    # Accept either the full _field_caps response (with "fields" key) or a bare fields dict
+    field_caps = raw.get("fields", raw)
+
+    attributes = process_field_caps(field_caps)
+    print(f"Populated fields: {len(field_caps)}")
+    print(f"Span attributes identified: {len(attributes)}")
+
+    # Build a synthetic ScanResult so we can reuse build_report / _print_summary
+    result = ScanResult(
+        es_url=str(path),
+        cluster_name=f"from-file:{path.name}",
+        cluster_version="unknown",
+        index_pattern=config.get("index_pattern", "traces-apm*"),
+        total_span_docs=raw.get("total_span_docs", -1),
+        attributes=attributes,
+    )
+
+    report = build_report(env, config, [result])
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out_dir = RUNS_DIR / env / timestamp
+    out_dir.mkdir(parents=True, exist_ok=True)
+    report_path = out_dir / "trace_attributes_report.json"
+    with open(report_path, "w") as f:
+        json.dump(report, f, indent=2)
+
+    latest = RUNS_DIR / env / "latest"
+    if latest.is_symlink():
+        latest.unlink()
+    latest.symlink_to(timestamp)
+
+    print(f"\nReport written to: {report_path}")
+    _print_summary(report)
+
+
 def run(env: str, config: dict) -> None:
     env_cfg = config.get("environments", {}).get(env)
     if env_cfg is None:
@@ -176,7 +220,9 @@ def _print_summary(report: dict) -> None:
     print("=" * 70)
     for cluster in report["clusters"]:
         print(f"\nCluster: {cluster['cluster_name']}  ({cluster['es_url']})")
-        print(f"  Span documents:   {cluster['total_span_docs']:,}")
+        doc_count = cluster['total_span_docs']
+        doc_str = "unknown" if doc_count < 0 else f"{doc_count:,}"
+        print(f"  Span documents:   {doc_str}")
         print(f"  Attributes found: {len(cluster['attributes'])}")
         cov = cluster["coverage"]
         print(f"  Coverage — matched: {len(cov['matched'])}  "

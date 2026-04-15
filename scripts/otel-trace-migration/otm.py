@@ -6,25 +6,25 @@ Scans APM trace data for span attributes, producing a report that can be
 used to verify the APM agent → OTel SDK migration preserves all attributes
 that downstream tooling depends on.
 
-Connects to a Kibana overview cluster and:
-  1. Discovers the local ES cluster and any CCS remote clusters automatically
-     via GET /_remote/info.
-  2. Scans traces-apm* on each cluster using _field_caps (no doc reads).
-  3. Writes a JSON report + prints a summary to stdout.
-
 Usage:
     ./otm <environment> <verb> [args...]
 
 Verbs:
-    report                    Scan all clusters and write a JSON attribute report
-    add-key <kibana_url> <key> Store a Kibana API key for the given overview URL
-    list-keys                 List stored Kibana URLs (not the keys themselves)
+    report                       Live scan via API keys (requires direct ES access)
+    report --from-file <file>    Process a pre-exported _field_caps JSON response
+    add-key <url> <key>          Store an ES API key for the given cluster URL
+    list-keys                    List stored cluster URLs
+
+The --from-file mode is the recommended approach when direct ES access is
+not available (e.g. the ES endpoint is behind a Kibana proxy that requires
+browser session auth).  Run this in the Kibana Dev Console and save the output:
+
+    GET *:traces-apm*,traces-apm*/_field_caps?include_empty_fields=false
+
+Then run:
+    ./otm qa report --from-file field_caps.json
 
 Environments are defined in config.yaml (e.g. 'qa', 'prod').
-
-Examples:
-    ./otm qa add-key https://overview.qa.cld.elstc.co VGhpcyBpcyBhIGZha2U=
-    ./otm qa report
 """
 
 from __future__ import annotations
@@ -60,17 +60,24 @@ def main() -> None:
     config = load_config()
 
     if verb == "report":
-        from report_trace_attributes import run
-        run(env, config)
+        if rest and rest[0] == "--from-file":
+            if len(rest) < 2:
+                print("Usage: ./otm <env> report --from-file <field_caps.json>", file=sys.stderr)
+                sys.exit(1)
+            from report_trace_attributes import run_from_file
+            run_from_file(env, config, Path(rest[1]))
+        else:
+            from report_trace_attributes import run
+            run(env, config)
 
     elif verb == "add-key":
         if len(rest) < 2:
-            print("Usage: ./otm <env> add-key <kibana_url> <api_key>", file=sys.stderr)
+            print("Usage: ./otm <env> add-key <url> <api_key>", file=sys.stderr)
             sys.exit(1)
-        kibana_url, api_key = rest[0], rest[1]
+        url, api_key = rest[0], rest[1]
         from auth import set_api_key
-        set_api_key(kibana_url, api_key)
-        print(f"API key stored for {kibana_url}")
+        set_api_key(url, api_key)
+        print(f"API key stored for {url}")
 
     elif verb == "list-keys":
         from auth import load_api_keys
