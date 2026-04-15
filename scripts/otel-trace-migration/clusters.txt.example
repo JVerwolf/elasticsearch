@@ -1,12 +1,15 @@
-# Elasticsearch overview cluster URL.
-# This is a direct ES endpoint — NOT a Kibana URL.
-# The overview cluster has CCS configured to all remote clusters, so the
-# scanner discovers and queries them all through a single connection:
-#   - The local cluster (queried directly)
-#   - Any CCS remote clusters returned by GET _remote/info (connected=true)
+# ES cluster URLs to scan directly (one per line, # = comment).
 #
-# One ES URL per line. Lines starting with # are ignored.
-# Credentials are stored separately in api-keys.json (see auth.py).
+# Derive from GET _remote/info on the overview cluster:
+#   1. Find relevant clusters (e.g. monitor-*)
+#   2. Take the proxy_address hostname, drop :9400, prefix https://
 #
-# Example:
-# https://overview.qa.cld.elstc.co
+# Example entry from _remote/info:
+#   "monitor-aws-eu-west-1": {
+#     "proxy_address": "8435137e1d624a1d9810728b8b382001.eu-west-1.aws.qa.cld.elstc.co:9400"
+#   }
+# Becomes:
+#   https://8435137e1d624a1d9810728b8b382001.eu-west-1.aws.qa.cld.elstc.co
+#
+# Add an API key for each cluster:
+#   ./otm <env> add-key <url> <encoded-api-key>
