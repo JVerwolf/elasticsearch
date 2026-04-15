@@ -1,37 +1,37 @@
 {
-  "_comment": "Synthetic _field_caps response: pre-migration state (APM Java agent path).",
-  "_comment2": "The APM Java agent intercepts OTel API calls and exports spans in APM NDJSON format.",
-  "_comment3": "In the NDJSON, OTel attributes are nested under an 'otel.attributes' object.",
-  "_comment4": "APM Server stores these as labels with the 'otel_attributes_' prefix in ES.",
-  "_comment5": "Standard HTTP OTel attributes (http.method, etc.) are mapped to native APM fields.",
-  "_comment6": "Use with: ./otm qa report --from-file test_data/field_caps_pre_migration.json",
+  "_comment": "Synthetic _field_caps response: post-migration state (OTel SDK path, PR #146096).",
+  "_comment2": "The OTel SDK (OtelSdkExportTracerSupplier) sends OTLP directly to APM Server.",
+  "_comment3": "APM Server maps standard OTel HTTP attributes to native APM fields (http.request.method etc.).",
+  "_comment4": "Custom ES attributes (es.node.name etc.) are stored as clean labels.* without the otel_attributes_ prefix.",
+  "_comment5": "Source: AbstractTracesIT.assertNodeStatsRootSpanAttributes() in elastic/elasticsearch#146096",
+  "_comment6": "Use with: ./otm qa report --from-file test_data/field_caps_post_migration.json",
 
   "fields": {
-    "labels.otel_attributes_es_node_name": {
+    "labels.es_node_name": {
       "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
     },
-    "labels.otel_attributes_es_cluster_name": {
+    "labels.es_cluster_name": {
       "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
     },
-    "labels.otel_attributes_es_x_opaque_id": {
+    "labels.es_x_opaque_id": {
       "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
     },
-    "labels.otel_attributes_es_task_id": {
+    "labels.es_task_id": {
       "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
     },
-    "labels.otel_attributes_es_task_parent_id": {
+    "labels.es_task_parent_id": {
       "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
     },
-    "labels.otel_attributes_http_flavour": {
+    "labels.http_flavour": {
       "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
     },
-    "labels.otel_attributes_http_request_headers_content_type": {
+    "labels.http_request_headers_content_type": {
       "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
     },
-    "labels.otel_attributes_http_request_headers_accept": {
+    "labels.http_request_headers_accept": {
       "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
     },
-    "labels.otel_attributes_http_response_headers_content_type": {
+    "labels.http_response_headers_content_type": {
       "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
     },
     "http.request.method": {
