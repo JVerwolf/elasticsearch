@@ -1,0 +1,84 @@
+{
+  "_comment": "Synthetic _field_caps response representing a real ES APM span index (pre-OTel-SDK-migration).",
+  "_comment2": "Fields were derived from known APM Java agent behaviour: OTel attributes land in labels.* with dots->underscores.",
+  "_comment3": "Use with: ./otm qa report --from-file test_data/field_caps_pre_migration.json",
+
+  "fields": {
+    "labels.es_node_name": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "labels.es_cluster_name": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "labels.es_x_opaque_id": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "labels.es_task_id": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "labels.es_task_parent_id": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "labels.http_flavour": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "labels.http_request_headers_content_type": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "labels.http_request_headers_accept": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "labels.http_response_headers_content_type": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "http.request.method": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "http.response.status_code": {
+      "long": {"type": "long", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "url.full": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true},
+      "text": {"type": "text", "metadata_field": false, "searchable": true, "aggregatable": false}
+    },
+    "agent.name": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "agent.version": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "service.name": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "service.version": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "service.node.name": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "data_stream.type": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "data_stream.dataset": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "data_stream.namespace": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "event.outcome": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "observer.type": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "processor.event": {
+      "keyword": {"type": "keyword", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "@timestamp": {
+      "date": {"type": "date", "metadata_field": false, "searchable": true, "aggregatable": true}
+    },
+    "_id": {
+      "_id": {"type": "_id", "metadata_field": true, "searchable": true, "aggregatable": false}
+    }
+  }
+}
