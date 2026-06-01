@@ -22,6 +22,8 @@ import org.elasticsearch.common.settings.Settings;
  */
 final class OtelSdkResource {
 
+    private static final String RESOURCE_SETTING_PREFIX = "telemetry.otel.resource.";
+
     private OtelSdkResource() {}
 
     static Resource get(Settings settings) {
@@ -37,6 +39,10 @@ final class OtelSdkResource {
         if (nodeName != null) {
             builder.put("service.instance.id", nodeName);
         }
+        OtelSdkSettings.TELEMETRY_OTEL_RESOURCE.getAllConcreteSettings(settings).forEach(concreteSetting -> {
+            String attributeKey = concreteSetting.getKey().substring(RESOURCE_SETTING_PREFIX.length());
+            builder.put(attributeKey, concreteSetting.get(settings));
+        });
         return Resource.getDefault().merge(builder.build());
     }
 }

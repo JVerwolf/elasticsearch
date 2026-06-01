@@ -153,4 +153,16 @@ public final class OtelSdkSettings {
         TimeValue.timeValueSeconds(10),
         NodeScope
     );
+
+    /**
+     * Arbitrary OTel resource attributes injected by the deployment framework (e.g.
+     * {@code telemetry.otel.resource.elasticsearch.node.tier=hot}). The suffix after
+     * {@code telemetry.otel.resource.} becomes the OTel attribute key.
+     * These are read-only at node startup and not dynamically reloadable.
+     */
+    public static final Setting.AffixSetting<String> TELEMETRY_OTEL_RESOURCE = Setting.prefixKeySetting(
+        "telemetry.otel.resource.",
+        null,
+        (namespace, qualifiedKey) -> Setting.simpleString(qualifiedKey, NodeScope)
+    );
 }
