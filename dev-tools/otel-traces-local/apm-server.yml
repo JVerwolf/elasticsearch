@@ -1,0 +1,13 @@
+apm-server:
+  host: "0.0.0.0:8200"
+
+# Accept unauthenticated OTLP from local ES (no token required)
+apm-server.auth.anonymous.enabled: true
+
+output.elasticsearch:
+  hosts: ["http://host.docker.internal:9200"]
+  username: "elastic-admin"
+  password: "elastic-password"
+
+logging.level: info
+logging.to_stderr: true

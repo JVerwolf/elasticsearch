@@ -1,0 +1,68 @@
+services:
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:8.18.3
+    container_name: es-otel-apm-server
+    user: root
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./apm-server.yml:/usr/share/apm-server/apm-server.yml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8200/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  kibana_settings:
+    image: curlimages/curl:latest
+    container_name: es-otel-kibana-settings
+    restart: "no"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command:
+      - /bin/sh
+      - -c
+      - |
+          echo "Waiting for Elasticsearch..."
+          start=$$(date +%s)
+          until curl -sf -u "elastic-admin:elastic-password" "http://host.docker.internal:9200/_cluster/health" > /dev/null; do
+            if [ $$(($$(date +%s) - $$start)) -ge 120 ]; then echo "ES timeout"; exit 1; fi
+            sleep 3
+          done
+          echo "Setting kibana_system password..."
+          until curl -sf -u "elastic-admin:elastic-password" -X POST "http://host.docker.internal:9200/_security/user/kibana_system/_password" -H "Content-Type: application/json" -d '{"password":"kibana-password"}' | grep -q "^{}"; do
+            sleep 2
+          done
+          echo "Done."
+
+  kibana:
+    depends_on:
+      kibana_settings:
+        condition: service_completed_successfully
+    image: docker.elastic.co/kibana/kibana:9.5.0-SNAPSHOT
+    container_name: es-otel-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      SERVER_NAME: kibana
+      ELASTICSEARCH_HOSTS: http://host.docker.internal:9200
+      ELASTICSEARCH_USERNAME: kibana_system
+      ELASTICSEARCH_PASSWORD: kibana-password
+      SERVER_HOST: "0.0.0.0"
+      XPACK_SECURITY_ENABLED: "false"
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: "otel-traces-local-eso-encryption-key-32"
+      ELASTICSEARCH_PUBLICBASEURL: http://host.docker.internal:9200
+      XPACK_SPACES_DEFAULTSOLUTION: "oblt"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:5601/api/status | grep -q '\"level\":\"available\"' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
